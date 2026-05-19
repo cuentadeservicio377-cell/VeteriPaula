@@ -1,26 +1,27 @@
 import { useState, useCallback } from 'react';
-import { getProgress, saveProgress, completeLevel, resetProgress } from './utils/storage.js';
+import { getProgress, completeLevel, resetProgress } from './utils/storage.js';
 import { getLevel, getTotalLevels } from './data/levels.js';
 import { getCharacterForLevel } from './data/characters.js';
 import HomeScreen from './components/screens/HomeScreen.jsx';
 import MapScreen from './components/screens/MapScreen.jsx';
+import LoadingScreen from './components/screens/LoadingScreen.jsx';
 import CelebrationScreen from './components/screens/CelebrationScreen.jsx';
 import GameCanvas from './components/game/GameCanvas.jsx';
 
 /**
- * Main App with simple state-based routing
+ * Main App with state-based routing
  */
 function App() {
-  const [screen, setScreen] = useState('home'); // home, map, game, celebration
+  const [screen, setScreen] = useState('home');
   const [currentLevel, setCurrentLevel] = useState(1);
   const [progress, setProgress] = useState(getProgress());
   const [levelData, setLevelData] = useState(null);
+  const [nextBiome, setNextBiome] = useState('home');
 
   const startGame = useCallback((levelId) => {
     const data = getLevel(levelId);
     if (!data) return;
     
-    // Add character info to level data
     const enrichedData = {
       ...data,
       character: getCharacterForLevel(levelId)
@@ -28,10 +29,20 @@ function App() {
     
     setCurrentLevel(levelId);
     setLevelData(enrichedData);
+    setNextBiome(data.biome);
     setScreen('game');
   }, []);
 
   const handlePlay = useCallback(() => {
+    // Show loading screen with vocab before first level
+    const data = getLevel(progress.currentLevel);
+    if (data) {
+      setNextBiome(data.biome);
+    }
+    setScreen('loading');
+  }, [progress.currentLevel]);
+
+  const handleLoadingReady = useCallback(() => {
     startGame(progress.currentLevel);
   }, [progress.currentLevel, startGame]);
 
@@ -46,7 +57,16 @@ function App() {
     if (nextLevel > getTotalLevels()) {
       setScreen('home');
     } else {
-      startGame(nextLevel);
+      // Show loading with vocab for next level's biome
+      const nextData = getLevel(nextLevel);
+      if (nextData) {
+        setNextBiome(nextData.biome);
+      }
+      setScreen('loading');
+      // We'll start the next level after loading
+      setTimeout(() => {
+        startGame(nextLevel);
+      }, 100);
     }
   }, [currentLevel, startGame]);
 
@@ -71,8 +91,21 @@ function App() {
       return (
         <MapScreen
           progress={progress}
-          onSelectLevel={startGame}
+          onSelectLevel={(levelId) => {
+            const data = getLevel(levelId);
+            if (data) setNextBiome(data.biome);
+            setScreen('loading');
+            setTimeout(() => startGame(levelId), 100);
+          }}
           onBack={() => setScreen('home')}
+        />
+      );
+
+    case 'loading':
+      return (
+        <LoadingScreen
+          nextBiome={nextBiome}
+          onReady={handleLoadingReady}
         />
       );
 
@@ -83,9 +116,8 @@ function App() {
           <GameCanvas
             levelData={levelData}
             onComplete={handleLevelComplete}
-            onFail={() => { /* Fail is handled within the game */ }}
+            onFail={() => {}}
           />
-          {/* Back button overlay */}
           <button
             onClick={() => setScreen('home')}
             style={{
