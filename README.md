@@ -1,49 +1,16 @@
-# 🐾 Veterin Paula
+# React + Vite
 
-> Un juego educativo para niños donde aprendes a leer mientras curas animales heridos.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🎯 Propósito
+Currently, two official plugins are available:
 
-**Veterin Paula** es un juego por niveles diseñado para niños de ~6 años que están aprendiendo a leer. La protagonista, Paula, recorre su camino para convertirse en veterinaria, encontrando animales heridos en situaciones cotidianas y curándolos mediante juegos de lectura interactivos.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## 🎮 Concepto del Juego
+## React Compiler
 
-- **Niveles principales**: Paula encuentra animales heridos y debe curarlos resolviendo desafíos de lectura
-- **Pantallas de carga**: Minijuegos de vocabulario para aprender nuevas palabras
-- **Recompensas**: Mensajes de celebración de familiares y amigos al curar cada animal
-- **Audiencia**: Niños en edad preescolar/primaria que están desarrollando habilidades de lectoescritura
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 🛠️ Tecnología
+## Expanding the ESLint configuration
 
-- **Plataforma**: Web (responsive, compatible con iPad y desktop)
-- **Motor**: HTML5 Canvas + JavaScript vanilla
-- **Testing**: Playwright para validación visual y funcional
-
-## 📂 Estructura del Proyecto
-
-```
-veteripaula/
-├── src/              # Código fuente del juego
-├── assets/           # Imágenes, sonidos, fuentes
-├── docs/             # Documentación de diseño y planes
-├── tests/            # Tests automatizados
-└── index.html        # Punto de entrada
-```
-
-## 🚀 Cómo ejecutar
-
-```bash
-# Servir localmente
-npx serve .
-
-# O con cualquier servidor estático
-python3 -m http.server 8080
-```
-
-## 📜 Licencia
-
-Este proyecto es de código abierto para que más familias puedan ayudar a sus hijos a aprender a leer.
-
----
-
-*Hecho con ❤️ para Paula*
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
