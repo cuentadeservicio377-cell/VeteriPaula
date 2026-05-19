@@ -1,36 +1,43 @@
 # TODOS
 
 ## En Progreso
-- [ ] Brainstorming y diseño del juego (esperando aprobación del usuario)
+- [x] Build funcionando y push a GitHub
 
 ## Pendientes
-- [ ] Escribir documento de especificación (spec)
-- [ ] Revisión del spec con subagente
-- [ ] Aprobación del spec por el usuario
-- [ ] Crear plan de implementación (writing-plans)
-- [ ] FASE 1: Setup del proyecto React + Canvas
-- [ ] FASE 2: Sistema base de renderizado en Canvas
-- [ ] FASE 3: Mecánicas de lectura (Fase 1: elegir palabra)
-- [ ] FASE 4: Niveles 1-12 (Bioma 1: Casa y Barrio)
-- [ ] FASE 5: Sistema de celebraciones con familiares
-- [ ] FASE 6: Minijuegos de vocabulario (pantallas de carga)
-- [ ] FASE 7: Mecánicas de lectura (Fase 2: formar sílabas)
-- [ ] FASE 8: Niveles 13-25 (Bioma 2: Granja)
-- [ ] FASE 9: Mecánicas de lectura (Fase 3: instrucciones paso a paso)
-- [ ] FASE 10: Niveles 26-38 (Bioma 3: Bosque)
-- [ ] FASE 11: Mecánicas de lectura (Fase 4: combinación avanzada)
-- [ ] FASE 12: Niveles 39-50+ (Bioma 4: Selva/Exóticos)
-- [ ] FASE 13: Sonido, música y TTS
-- [ ] FASE 14: Arte y animaciones
-- [ ] FASE 15: Testing con Playwright
-- [ ] FASE 16: Polish, accesibilidad y responsive
-- [ ] FASE 17: Deploy y documentación
+- [ ] Agregar música de fondo por bioma
+- [ ] Testing con Playwright (validación visual)
+- [ ] Más animaciones de partículas
+- [ ] Sistema de estrellas por nivel (1-3 estrellas)
+- [ ] Logros/insignias para Paula
+- [ ] Modo portrait/landscape más pulido en móvil
+- [ ] Arte final: sprites más detallados
+- [ ] Transiciones animadas entre pantallas
+- [ ] Efecto de vibración en dispositivos móviles
+- [ ] Configuración (volumen, velocidad TTS, etc.)
+- [ ] Pantalla de créditos
 
 ## Parking Lot (NO tocar ahora)
 _Cosas descubiertas durante el desarrollo que NO están en el plan actual_
+- Integración con backend para leaderboard (no es necesario para MVP)
+- Múltiples perfiles de jugador (fuera de scope inicial)
+- Sistema de padres para ver progreso (futuro)
 
 ## Hecho
 - [x] Inicializar repositorio Git
 - [x] Crear repositorio público en GitHub
-- [x] Primer commit con README y .gitignore
-- [x] Revisar skills disponibles (develop-web-game, project-flow, brainstorming, writing-plans, office-hours)
+- [x] Revisar skills disponibles
+- [x] Especificación de diseño completa
+- [x] Setup proyecto React + Vite
+- [x] Game engine Canvas con loop
+- [x] 50 niveles definidos
+- [x] 3 mecánicas de lectura implementadas
+- [x] Personaje Paula con animaciones
+- [x] Animales con estados (herido/curando/feliz)
+- [x] Pantallas React: Home, Map, Loading, Celebration
+- [x] Sistema de celebraciones con 6 familiares
+- [x] Minijuegos de vocabulario en pantallas de carga
+- [x] TTS (Web Speech API)
+- [x] Efectos de sonido
+- [x] Guardado de progreso en localStorage
+- [x] Build funcionando
+- [x] Push a GitHub
