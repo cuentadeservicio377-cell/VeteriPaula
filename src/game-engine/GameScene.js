@@ -36,6 +36,13 @@ export class GameScene {
     this.inactivityTimer = 0;
     this.hintLevel = 0;
 
+    // Visual effects
+    this.screenShake = 0;
+    this.flashAlpha = 0;
+
+    // Petting reward counter (level 1)
+    this.petCount = 0;
+
     // Tutorial
     this.tutorialHand = null;
 
@@ -277,27 +284,40 @@ export class GameScene {
     // SFX: magic arpeggio for level complete
     playMagic();
 
-    // Rich celebration
+    // WOW MOMENT: Screen shake + flash
+    this.screenShake = 12;
+    this.flashAlpha = 0.8;
+
+    // Rich celebration — more particles for level 1
     const cx = this.animal.centerX();
     const cy = this.animal.y;
-    this.particles.spawnConfetti(cx, cy, 40);
-    this.particles.spawnHearts(cx, cy - 30, 10);
-    this.particles.spawnStars(cx, cy - 50, 15);
+    const particleCount = this.levelData.id === 1 ? 80 : 40;
+    this.particles.spawnConfetti(cx, cy, particleCount);
+    this.particles.spawnHearts(cx, cy - 30, 20);
+    this.particles.spawnStars(cx, cy - 50, 25);
+
+    // Level 1: Burst from multiple points
+    if (this.levelData.id === 1) {
+      this.particles.spawnConfetti(cx - 80, cy, 30);
+      this.particles.spawnConfetti(cx + 80, cy, 30);
+      this.particles.spawnHearts(cx, cy - 60, 15);
+    }
 
     // Animal happy bark
     setTimeout(() => playDogBark(), 400);
 
-    // Paula jumps
+    // Paula jumps (higher for level 1)
+    const jumpHeight = this.levelData.id === 1 ? 60 : 40;
     tween({
       from: { y: this.paula.y },
-      to: { y: this.paula.y - 40 },
+      to: { y: this.paula.y - jumpHeight },
       duration: 250,
       ease: 'easeOut',
       onUpdate: (v) => { this.paula.y = v.y; },
       onComplete: () => {
         tween({
           from: { y: this.paula.y },
-          to: { y: this.paula.y + 40 },
+          to: { y: this.paula.y + jumpHeight },
           duration: 300,
           ease: 'easeOutBounce',
           onUpdate: (v) => { this.paula.y = v.y; },
@@ -311,15 +331,16 @@ export class GameScene {
     }, 200);
     this.timers.push(t1);
 
-    // Move to celebrate state
+    // Level 1: Petting reward phase — stay in success longer
+    const delay = this.levelData.id === 1 ? 4000 : 800;
     const t2 = setTimeout(() => {
       this.state = 'celebrate';
       if (this.onComplete) this.onComplete();
-    }, 800);
+    }, delay);
     this.timers.push(t2);
   }
 
-  onTreatmentFail() {
+  onTreatmentFail(wrongWord) {
     this.failCount++;
     this.inactivityTimer = 0;
 
@@ -327,6 +348,45 @@ export class GameScene {
     if (this.tutorialHand) {
       this.tutorialHand.done = true;
       this.tutorialHand = null;
+    }
+
+    // Level 1 special: "no-fail" fun reaction when choosing HUESO
+    if (this.levelData.id === 1 && wrongWord === 'HUESO') {
+      // Paula explains in a friendly way
+      const tts1 = setTimeout(() => {
+        speak('¡Un hueso es para comer! Pipo necesita una venda para su pata', { rate: 0.75, pitch: 1.15 });
+      }, 400);
+      this.timers.push(tts1);
+
+      // Paula points to Pipo's hurt paw
+      if (this.animal) {
+        const pawX = this.animal.x + this.animal.width * 0.5;
+        const pawY = this.animal.y + this.animal.height * 0.8;
+        this.pointingTarget = { x: pawX, y: pawY };
+        this.pointingTimer = 3.0;
+        this.paula.setState('pointing');
+      }
+
+      // Pipo looks confused (head up, then back down)
+      if (this.animal && this.animal.setState) {
+        this.animal.setState('head_up');
+        const t = setTimeout(() => {
+          if (this.animal && this.animal.state === 'head_up') {
+            this.animal.setState('lying_down');
+          }
+        }, 1200);
+        this.timers.push(t);
+      }
+
+      // After explanation, auto-highlight the correct button
+      const t2 = setTimeout(() => {
+        if (this.mechanic && this.mechanic.highlightCorrect) {
+          this.mechanic.highlightCorrect();
+        }
+      }, 2500);
+      this.timers.push(t2);
+
+      return; // Skip default fail handling for level 1 HUESO
     }
 
     // Escalate hint level
@@ -409,6 +469,16 @@ export class GameScene {
       }
     }
 
+    // Decay visual effects
+    if (this.screenShake > 0) {
+      this.screenShake *= 0.9;
+      if (this.screenShake < 0.5) this.screenShake = 0;
+    }
+    if (this.flashAlpha > 0) {
+      this.flashAlpha -= dt * 1.5;
+      if (this.flashAlpha < 0) this.flashAlpha = 0;
+    }
+
     // Detect inactivity for hints
     if (this.state === 'playing' && !this.mechanic?.completed) {
       this.inactivityTimer += dt;
@@ -419,6 +489,14 @@ export class GameScene {
   }
 
   render(ctx, width, height) {
+    // Apply screen shake
+    ctx.save();
+    if (this.screenShake > 0) {
+      const sx = (Math.random() - 0.5) * this.screenShake;
+      const sy = (Math.random() - 0.5) * this.screenShake;
+      ctx.translate(sx, sy);
+    }
+
     this.renderBackground(ctx, width, height);
     if (this.paula) this.paula.render(ctx);
     if (this.animal) this.animal.render(ctx);
@@ -443,6 +521,18 @@ export class GameScene {
       ctx.font = "16px 'Nunito', sans-serif";
       ctx.textAlign = 'center';
       ctx.fillText('Toca para continuar', width / 2, height * 0.96);
+      ctx.restore();
+    }
+
+    // Restore from screen shake
+    ctx.restore();
+
+    // Flash effect (rendered on top, unaffected by shake)
+    if (this.flashAlpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = this.flashAlpha;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
       ctx.restore();
     }
 
@@ -582,7 +672,38 @@ export class GameScene {
       return true;
     }
 
-    // Skip celebration on tap
+    // Level 1 petting reward during success
+    if (this.state === 'success' && this.levelData.id === 1 && this.animal) {
+      const zone = this.animal.getTouchedZone?.(x, y);
+      if (zone && this.animal.onPet) {
+        this.animal.onPet();
+        this.petCount++;
+        // Spawn extra hearts on pet
+        const cx = this.animal.centerX();
+        const cy = this.animal.y;
+        this.particles.spawnHearts(cx, cy - 20, 5);
+
+        if (this.petCount >= 3) {
+          // Paula says goodbye
+          speak('¡Pipo está muy feliz! Eres un gran veterinario', { rate: 0.8, pitch: 1.15 });
+          this.timers.forEach(t => clearTimeout(t));
+          this.timers = [];
+          this.state = 'celebrate';
+          if (this.onComplete) this.onComplete();
+        }
+        return true;
+      }
+      // Tap elsewhere skips
+      this.timers.forEach(t => clearTimeout(t));
+      this.timers = [];
+      stopTTS();
+      stopBackgroundMusic();
+      this.state = 'celebrate';
+      if (this.onComplete) this.onComplete();
+      return true;
+    }
+
+    // Skip celebration on tap (non-level-1)
     if (this.state === 'success') {
       this.timers.forEach(t => clearTimeout(t));
       this.timers = [];

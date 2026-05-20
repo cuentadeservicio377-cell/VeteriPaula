@@ -74,9 +74,12 @@ export class Pipo {
   }
 
   update(dt) {
+    // Breathing animation (subtle Y offset)
+    const breathOffset = Math.sin(Date.now() * 0.003) * 1.5;
+
     if (this.sprite) {
       this.sprite.x = this.x;
-      this.sprite.y = this.y;
+      this.sprite.y = this.y + breathOffset;
       this.sprite.update(dt);
     }
 
@@ -93,12 +96,12 @@ export class Pipo {
 
     // Blink animation
     this.blinkTimer += dt;
-    if (this.blinkTimer > 3 + Math.random() * 2) {
+    if (!this.isBlinking && this.blinkTimer > 2.5 + Math.random() * 2) {
       this.isBlinking = true;
-      if (this.blinkTimer > 3.2 + Math.random() * 2) {
-        this.isBlinking = false;
-        this.blinkTimer = 0;
-      }
+      this.blinkTimer = 0;
+    } else if (this.isBlinking && this.blinkTimer > 0.25) {
+      this.isBlinking = false;
+      this.blinkTimer = 0;
     }
 
     // Reaction bubble timer
@@ -141,6 +144,18 @@ export class Pipo {
     }
 
     this.sprite.render(ctx);
+
+    // Blink: draw closed eyes (skin-colored bars over the eyes)
+    if (this.isBlinking && (this.state === 'lying_down' || this.state === 'head_up')) {
+      const s = this.sprite.scale || 6;
+      const eyeX = this.sprite.x + 2 * s;
+      const eyeY = this.sprite.y + 5 * s;
+      const eyeW = 6 * s;
+      const eyeH = 2 * s;
+      ctx.fillStyle = '#FFDAB9'; // A7 peach color
+      ctx.fillRect(eyeX, eyeY, eyeW, eyeH);
+    }
+
     ctx.restore();
 
     // Draw name label

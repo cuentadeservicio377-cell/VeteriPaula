@@ -226,7 +226,7 @@ export class TapWordMechanic {
       btn.reset();
     }, 800);
 
-    if (this.onFail) this.onFail();
+    if (this.onFail) this.onFail(btn.word);
   }
 
   handleMouseMove(x, y) {
@@ -275,6 +275,27 @@ export class TapWordMechanic {
   getCorrectTarget() {
     const btn = this.buttons.find(b => b.isCorrect);
     return btn ? { x: btn.x + btn.width / 2, y: btn.y + btn.height / 2 } : null;
+  }
+
+  highlightCorrect() {
+    const correctBtn = this.buttons.find(b => b.isCorrect);
+    if (!correctBtn || correctBtn.confirmed) return;
+    tween({
+      from: { glow: 0, scale: 1 },
+      to: { glow: 50, scale: 1.15 },
+      duration: 600,
+      ease: 'easeInOut',
+      yoyo: true,
+      repeat: 3,
+      onUpdate: (v) => {
+        correctBtn.glowRadius = v.glow;
+        correctBtn.scale = v.scale;
+      },
+      onComplete: () => {
+        correctBtn.glowRadius = 20;
+        correctBtn.scale = 1.05;
+      }
+    });
   }
 
   resize(canvasWidth, canvasHeight) {
