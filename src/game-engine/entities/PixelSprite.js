@@ -181,6 +181,8 @@ export class AnimatedPixelSprite {
     sprite.opacity = this.opacity;
     sprite.rotation = this.rotation;
 
+
+
     sprite.render(ctx);
   }
 

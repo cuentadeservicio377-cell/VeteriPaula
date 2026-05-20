@@ -27,7 +27,14 @@ export class Pipo {
     if (frame) {
       this._width = frame.width * this.sprite.scale;
       this._height = frame.height * this.sprite.scale;
+    } else {
+      this._width = 18 * 6;
+      this._height = 16 * 6;
     }
+
+    // Cache current frame dimensions for fast access
+    this._frameWidth = this._width;
+    this._frameHeight = this._height;
 
     // Touch zones (relative to sprite top-left)
     // These are approximate hitboxes for different body parts
@@ -48,6 +55,16 @@ export class Pipo {
     this.reactionText = null;
     this.reactionScale = 0;
     this.reactionTimer = 0;
+  }
+
+  get width() {
+    const frame = this.sprite?.frames?.[this.sprite?.currentState];
+    return frame ? frame.width * this.sprite.scale : this._frameWidth;
+  }
+
+  get height() {
+    const frame = this.sprite?.frames?.[this.sprite?.currentState];
+    return frame ? frame.height * this.sprite.scale : this._frameHeight;
   }
 
   setState(state) {

@@ -58,7 +58,7 @@ export class GameScene {
     // Animal waits on the right, hurt
     // Level 1 special: Pipo the dog with interactive touch zones
     if (this.levelData.id === 1) {
-      this.animal = new Pipo(w * 0.58, h * 0.42, 6);
+      this.animal = new Pipo(w * 0.52, h * 0.32, 10);
       this.animal.state = 'lying_down';
     } else {
       this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
