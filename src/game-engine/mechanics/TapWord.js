@@ -111,6 +111,15 @@ export class TapWordMechanic {
       ctx.shadowBlur = 20;
       this.flyingItem.sprite.render(ctx);
       ctx.shadowBlur = 0;
+      // Debug: red box around flying item
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(
+        this.flyingItem.sprite.x - 5,
+        this.flyingItem.sprite.y - 5,
+        this.flyingItem.sprite.width * this.flyingItem.sprite.scale + 10,
+        this.flyingItem.sprite.height * this.flyingItem.sprite.scale + 10
+      );
       ctx.restore();
     }
 
