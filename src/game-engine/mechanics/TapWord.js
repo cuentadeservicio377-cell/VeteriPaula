@@ -160,8 +160,8 @@ export class TapWordMechanic {
         const spriteType = STEP_TO_SPRITE[btn.word.toUpperCase()];
         if (spriteType && animal) {
           this.flyingItem = {
-            sprite: createItemSprite(spriteType, targetX, targetY, 3),
-            timer: 1.2,
+            sprite: createItemSprite(spriteType, targetX, targetY, 4),
+            timer: 1.8,
             phase: 'stick',
             alpha: 1,
           };
@@ -190,8 +190,8 @@ export class TapWordMechanic {
 
         speakSuccess(btn.word);
 
-        // Trigger scene success after bandage sticks
-        const delay = this.flyingItem ? 900 : 100;
+        // Trigger scene success after bandage sticks (give time to see it!)
+        const delay = this.flyingItem ? 1600 : 100;
         setTimeout(() => {
           if (this.onSuccess) this.onSuccess();
         }, delay);

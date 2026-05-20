@@ -372,7 +372,7 @@ export class GameScene {
     if (this.paula) this.paula.render(ctx);
     if (this.animal) this.animal.render(ctx);
     this.particles.render(ctx);
-    if (this.mechanic && this.state === 'playing') this.mechanic.render(ctx);
+    if (this.mechanic && (this.state === 'playing' || this.state === 'success')) this.mechanic.render(ctx);
 
     // Render Paula pointing line
     if (this.pointingTarget && this.paula) {
