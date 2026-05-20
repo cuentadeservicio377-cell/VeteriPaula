@@ -19,34 +19,53 @@
 - ✅ TTS (Web Speech API) para lectura en voz alta
 - ✅ Efectos de sonido con Web Audio API
 - ✅ Progreso guardado en localStorage
-- ✅ Build funcionando y desplegado en GitHub Pages
+- ✅ Build funcionando y desplegado en GitHub Pages + Netlify
 
-## Features Completadas
-- [x] Infraestructura del proyecto
-- [x] Sistema de niveles (50 niveles, 4 biomas)
-- [x] Game engine Canvas
-- [x] Mecánica "Elegir palabra" (Fase 1)
-- [x] Mecánica "Formar sílabas" (Fase 2)
-- [x] Mecánica "Seguir instrucciones" (Fase 3)
-- [x] Mecánica "Combinada" (Fase 4)
-- [x] Personaje Paula con animaciones
-- [x] Animales con estados (herido, curando, feliz)
-- [x] UI React (Home, Mapa, Celebración)
-- [x] Pantallas de carga con minijuegos de vocabulario
-- [x] Celebraciones con familiares
-- [x] TTS para lectura en voz alta
-- [x] Efectos de sonido
-- [x] Guardado de progreso
-- [x] Build y deploy
+### 2026-05-19 — Rediseño v2.0 (Investigación + Implementación)
+- ✅ Investigación con 4 agentes en paralelo:
+  - Benchmark de juegos educativos de lectura (TOP 5)
+  - Auditoría de código actual
+  - Comparación de motores de juegos web
+  - Mejores prácticas de game design para niños de 6 años
+- ✅ Plan de rediseño v2.0 documentado
+- ✅ Reducción de 50 a 20 niveles de alta calidad
+- ✅ 4 bloques de 5 niveles con desbloqueo progresivo
+- ✅ Sistema de tweening nativo (6 easing curves)
+- ✅ Sistema de drag & drop con magnetismo a slots
+- ✅ Sistema de partículas (confetti, corazones, estrellas, sparkles)
+- ✅ Mecánica TapWord v2 (palabras flotantes, animación de vuelo)
+- ✅ Mecánica DragSyllables v2 (arrastrar sílabas con snap)
+- ✅ Mecánica FollowSteps v2 (arrastrar objetos en orden)
+- ✅ GameScene v2 con fondos por bioma, Paula animada, sistema anti-frustración
+- ✅ Paleta de colores por bloque
+- ✅ UI screens actualizadas (Home, Map, Celebration)
+- ✅ Build exitoso y push a GitHub
 
-## Features Pendientes
-- [ ] Más animaciones y partículas
-- [ ] Música de fondo por bioma
-- [ ] Arte final (sprites profesionales)
-- [ ] Testing con Playwright
-- [ ] Modo portrait/landscape más pulido
+## Features Completadas v2.0
+- [x] Investigación de mercado con agentes
+- [x] 20 niveles de calidad (vs 50 mediocres)
+- [x] 4 bloques desbloqueables
+- [x] Tweening engine nativo
+- [x] Drag & drop con magnetismo
+- [x] Particle system (confetti, hearts, stars, sparkles, magic)
+- [x] Mecánicas rediseñadas con animaciones ricas
+- [x] Anti-frustración: reintentos suaves, pistas, sin game over
+- [x] Paula con estados emocionales (idle, worried, celebrate, walk)
+- [x] Animal con floating animation
+- [x] Fondos temáticos por bioma
+- [x] Paleta de colores por bloque
+- [x] Mapa de niveles con bloques visuales
+
+## Features Pendientes v2.x
+- [ ] Sonidos de fonética por letra
+- [ ] Música ambiental por bloque
+- [ ] Arte final (sprites profesionales o Rive)
 - [ ] Sistema de estrellas por nivel
-- [ ] Logros/insignias
+- [ ] Galería de animales curados
+- [ ] Testing con Playwright
+- [ ] Playtesting con niños reales
+- [ ] Dashboard para padres
+- [ ] Racha diaria suave
 
 ## Bloqueadores Resueltos
 - Ninguno actualmente
