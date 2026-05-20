@@ -15,6 +15,7 @@ export class WordButton extends Entity {
     this.pressed = false;
     this.confirmed = false; // true when selected/correct
     this.wrong = false; // true when selected/incorrect
+    this.glowRadius = 0;
     
     this.bgColor = options.bgColor || '#FFDac1';
     this.hoverColor = options.hoverColor || '#FFB7B2';
@@ -37,6 +38,17 @@ export class WordButton extends Entity {
     if (this.confirmed) color = this.correctColor;
     else if (this.wrong) color = this.wrongColor;
     else if (this.hovered) color = this.hoverColor;
+
+    // Glow effect (hint anti-frustration)
+    if (this.glowRadius > 0) {
+      ctx.save();
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur = this.glowRadius;
+      this.roundRect(ctx, -4, -4, this.width + 8, this.height + 8, this.borderRadius + 4);
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+      ctx.fill();
+      ctx.restore();
+    }
 
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.1)';
@@ -74,6 +86,15 @@ export class WordButton extends Entity {
     ctx.lineTo(x, y + r);
     ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
+  }
+
+  containsExpanded(px, py, scale = 1.4) {
+    const padX = (this.width * scale - this.width) / 2;
+    const padY = (this.height * scale - this.height) / 2;
+    return px >= this.x - padX
+        && px <= this.x + this.width + padX
+        && py >= this.y - padY
+        && py <= this.y + this.height + padY;
   }
 
   onPress() {

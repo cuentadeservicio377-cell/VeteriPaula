@@ -3,10 +3,10 @@ import { WordButton } from '../entities/WordButton.js';
 import { tween, pulse } from '../../utils/tween.js';
 import { createItemSprite, STEP_TO_SPRITE } from '../sprites/Items.js';
 import { speak, speakEncouragement } from '../../utils/tts.js';
+import { playWhoosh, playSnap, playBoing } from '../../utils/sfx.js';
 
 /**
- * v2.1 — Follow Steps with TTS on every interaction
- * Drag treatment items to the animal in order
+ * v2.2 — Follow Steps with SFX, partial rewards, hints, better UX
  */
 export class FollowStepsMechanic {
   constructor(levelData, canvasWidth, canvasHeight) {
@@ -16,18 +16,18 @@ export class FollowStepsMechanic {
     this.stepObjects = [];
     this.slots = [];
     this.draggables = [];
-    this.itemSprites = []; // pixel art sprites for each step
+    this.itemSprites = [];
     this.currentStep = 0;
     this.completed = false;
     this.onSuccess = null;
     this.onFail = null;
+    this.scene = null; // set by GameScene
     this.createElements();
   }
 
   createElements() {
     const steps = this.levelData.steps || [];
 
-    // Create one drop zone near the animal
     this.animalZone = {
       x: this.w * 0.55,
       y: this.h * 0.20,
@@ -55,7 +55,6 @@ export class FollowStepsMechanic {
     };
     this.slots = [this.animalZone];
 
-    // Create draggable step objects
     const objWidth = 100;
     const objHeight = 80;
     const spacing = 20;
@@ -79,11 +78,9 @@ export class FollowStepsMechanic {
       );
       obj.stepName = step;
       obj.isAvailable = i === 0;
-      // Hide future steps so they don't confuse the child
       obj.visible = i === 0;
       this.stepObjects.push(obj);
 
-      // Create pixel art item sprite for this step
       const spriteType = STEP_TO_SPRITE[step] || 'agua';
       const sprite = createItemSprite(
         spriteType,
@@ -95,7 +92,7 @@ export class FollowStepsMechanic {
 
       const drag = new Draggable(obj, {
         slots: this.slots,
-        magnetDistance: 80,
+        magnetDistance: 110, // increased from 80
         dragScale: 1.15,
         onDragStart: () => this.onDragStart(obj),
         onSnap: (entity, slot) => this.onSnap(obj, slot),
@@ -111,7 +108,7 @@ export class FollowStepsMechanic {
       setTimeout(() => obj.reset(), 300);
       return false;
     }
-    // Speak the step name when picked up
+    playWhoosh();
     speak(obj.stepName, { rate: 0.75, pitch: 1.1 });
   }
 
@@ -121,6 +118,44 @@ export class FollowStepsMechanic {
       obj.setCorrect();
       obj.isAvailable = false;
       this.currentStep++;
+      playSnap();
+
+      // ===== PARTIAL REWARD =====
+      // Paula mini-celebration
+      if (this.scene?.triggerPaulaMiniCheer) {
+        this.scene.triggerPaulaMiniCheer();
+      }
+
+      // Animal micro-reaction
+      if (this.scene?.animal) {
+        const animal = this.scene.animal;
+        tween({
+          from: { y: animal.y },
+          to: { y: animal.y - 8 },
+          duration: 120,
+          ease: 'easeOut',
+          onUpdate: (v) => { animal.y = v.y; },
+          onComplete: () => {
+            tween({
+              from: { y: animal.y },
+              to: { y: animal.y + 8 },
+              duration: 180,
+              ease: 'easeOutBounce',
+              onUpdate: (v) => { animal.y = v.y; },
+            });
+          },
+        });
+      }
+
+      // Sparkles in animal zone
+      if (this.scene?.particles) {
+        const zoneCx = this.animalZone.x + this.animalZone.width / 2;
+        const zoneCy = this.animalZone.y + this.animalZone.height / 2;
+        this.scene.particles.spawnSparkles(zoneCx, zoneCy, 5);
+      }
+
+      speak('¡Bien!', { rate: 0.85, pitch: 1.2 });
+      // ===== END PARTIAL REWARD =====
 
       tween({
         from: { scale: 1 },
@@ -131,28 +166,24 @@ export class FollowStepsMechanic {
         onComplete: () => { obj.visible = false; }
       });
 
-      // Speak positive feedback for the step
-      speak('¡Bien!', { rate: 0.85, pitch: 1.2 });
-
       if (this.currentStep < this.stepObjects.length) {
         const nextObj = this.stepObjects[this.currentStep];
         nextObj.isAvailable = true;
         nextObj.visible = true;
-        // Speak what's next after a short delay
         setTimeout(() => {
           speak(`Ahora: ${nextObj.stepName}`, { rate: 0.75, pitch: 1.1 });
-        }, 600);
+        }, 400);
         pulse(nextObj, 0.15, 600);
       }
 
       if (this.currentStep >= this.levelData.steps.length) {
         this.completed = true;
-        // Reduced from 1000ms to 600ms
         setTimeout(() => {
           if (this.onSuccess) this.onSuccess();
         }, 600);
       }
     } else {
+      playBoing();
       obj.setWrong();
       setTimeout(() => {
         const drag = this.draggables.find(d => d.entity === obj);
@@ -171,7 +202,6 @@ export class FollowStepsMechanic {
 
   update(dt) {
     this.stepObjects.forEach(btn => btn.update(dt));
-    // Update item sprite positions to follow their buttons
     this.itemSprites.forEach((sprite, i) => {
       const btn = this.stepObjects[i];
       if (sprite && btn) {
@@ -182,20 +212,17 @@ export class FollowStepsMechanic {
   }
 
   render(ctx) {
-    // Question
     ctx.fillStyle = '#5D4037';
     ctx.font = "bold 24px 'Nunito', sans-serif";
     ctx.textAlign = 'center';
     ctx.fillText(this.levelData.instruction, this.w / 2, this.h * 0.18);
 
-    // Current step indicator with pixel art icon
     if (!this.completed) {
       ctx.fillStyle = '#8D6E63';
       ctx.font = "bold 20px 'Nunito', sans-serif";
       const stepName = this.levelData.steps[this.currentStep];
       ctx.fillText(`Paso ${this.currentStep + 1}: ${stepName}`, this.w / 2, this.h * 0.28);
 
-      // Draw current step item sprite next to text
       const currentSprite = this.itemSprites[this.currentStep];
       if (currentSprite) {
         const textWidth = ctx.measureText(`Paso ${this.currentStep + 1}: ${stepName}`).width;
@@ -205,22 +232,17 @@ export class FollowStepsMechanic {
       }
     }
 
-    // Drop zone
     this.animalZone.render(ctx);
 
-    // Step objects — only render visible ones
     this.stepObjects.forEach((obj, i) => {
       if (!obj.visible) return;
       obj.render(ctx);
-
-      // Pixel art item icon on the button
       const sprite = this.itemSprites[i];
       if (sprite && obj.visible) {
         sprite.render(ctx);
       }
     });
 
-    // Progress
     if (!this.completed) {
       ctx.fillStyle = '#BCAAA4';
       ctx.font = "16px 'Nunito', sans-serif";
@@ -259,6 +281,28 @@ export class FollowStepsMechanic {
         obj.hovered = obj.contains(x, y);
       }
     });
+  }
+
+  showHint(level) {
+    if (level >= 1) {
+      const nextObj = this.stepObjects[this.currentStep];
+      if (nextObj) {
+        tween({
+          from: { glow: 0 },
+          to: { glow: 35 },
+          duration: 600,
+          yoyo: true,
+          repeat: 3,
+          onUpdate: (v) => { nextObj.glowRadius = v.glow; },
+          onComplete: () => { nextObj.glowRadius = 0; }
+        });
+      }
+    }
+  }
+
+  getCorrectTarget() {
+    const nextObj = this.stepObjects[this.currentStep];
+    return nextObj ? { x: nextObj.x + nextObj.width / 2, y: nextObj.y + nextObj.height / 2 } : null;
   }
 
   resize(canvasWidth, canvasHeight) {
