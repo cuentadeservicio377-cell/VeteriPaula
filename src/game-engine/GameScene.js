@@ -6,6 +6,7 @@ import { FollowStepsMechanic } from './mechanics/FollowSteps.js';
 import { ParticleSystem } from '../utils/particles.js';
 import { tween, float } from '../utils/tween.js';
 import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
+import { createItemSprite } from './sprites/Items.js';
 
 /**
  * v2.0 Game Scene — Rich animations, particles, tweening, anti-frustration
@@ -26,6 +27,7 @@ export class GameScene {
     this.floatAnim = null;
 
     this.decorations = [];
+    this.soundSprite = null;
     this.setupScene();
   }
 
@@ -60,6 +62,9 @@ export class GameScene {
 
     // Create pixel art decorations
     this.createDecorations();
+
+    // Sound button sprite
+    this.soundSprite = createItemSprite('sound', this.canvas.width - 50, 18, 3);
   }
 
   createDecorations() {
@@ -272,9 +277,12 @@ export class GameScene {
     this.roundRect(ctx, w - 58, 12, 46, 42, 12);
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.font = '22px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🔊', w - 35, 40);
+
+    // Pixel art sound icon
+    if (this.soundSprite) {
+      this.soundSprite.x = w - 50;
+      this.soundSprite.render(ctx);
+    }
   }
 
   roundRect(ctx, x, y, w, h, r) {

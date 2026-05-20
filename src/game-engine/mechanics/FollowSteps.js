@@ -1,10 +1,11 @@
 import { Draggable, DropSlot } from '../../utils/draggable.js';
 import { WordButton } from '../entities/WordButton.js';
 import { tween, pulse } from '../../utils/tween.js';
+import { createItemSprite, STEP_TO_SPRITE } from '../sprites/Items.js';
 
 /**
- * v2.0 — Follow Steps with drag & drop objects
- * Drag objects (water, bandage, etc.) to the animal in order
+ * v2.0 — Follow Steps with drag & drop pixel art objects
+ * Drag treatment items to the animal in order
  */
 export class FollowStepsMechanic {
   constructor(levelData, canvasWidth, canvasHeight) {
@@ -14,6 +15,7 @@ export class FollowStepsMechanic {
     this.stepObjects = [];
     this.slots = [];
     this.draggables = [];
+    this.itemSprites = []; // pixel art sprites for each step
     this.currentStep = 0;
     this.completed = false;
     this.onSuccess = null;
@@ -23,7 +25,6 @@ export class FollowStepsMechanic {
 
   createElements() {
     const steps = this.levelData.steps || [];
-    const emojis = this.levelData.stepEmojis || [];
 
     // Create one drop zone near the animal
     this.animalZone = {
@@ -63,6 +64,7 @@ export class FollowStepsMechanic {
 
     this.stepObjects = [];
     this.draggables = [];
+    this.itemSprites = [];
 
     steps.forEach((step, i) => {
       const obj = new WordButton(
@@ -75,9 +77,18 @@ export class FollowStepsMechanic {
         }
       );
       obj.stepName = step;
-      obj.stepEmoji = emojis[i] || '';
-      obj.isAvailable = i === 0; // Only first step is available initially
+      obj.isAvailable = i === 0;
       this.stepObjects.push(obj);
+
+      // Create pixel art item sprite for this step
+      const spriteType = STEP_TO_SPRITE[step] || 'agua';
+      const sprite = createItemSprite(
+        spriteType,
+        obj.x + obj.width / 2 - 16,
+        obj.y + 8,
+        4
+      );
+      this.itemSprites.push(sprite);
 
       const drag = new Draggable(obj, {
         slots: this.slots,
@@ -93,7 +104,6 @@ export class FollowStepsMechanic {
 
   onDragStart(obj) {
     if (!obj.isAvailable) {
-      // Shake to indicate not available yet
       obj.setWrong();
       setTimeout(() => obj.reset(), 300);
       return false;
@@ -107,7 +117,6 @@ export class FollowStepsMechanic {
       obj.isAvailable = false;
       this.currentStep++;
 
-      // Animate the object becoming part of the animal
       tween({
         from: { scale: 1 },
         to: { scale: 0.5 },
@@ -117,14 +126,12 @@ export class FollowStepsMechanic {
         onComplete: () => { obj.visible = false; }
       });
 
-      // Unlock next step
       if (this.currentStep < this.stepObjects.length) {
         const nextObj = this.stepObjects[this.currentStep];
         nextObj.isAvailable = true;
         pulse(nextObj, 0.15, 600);
       }
 
-      // Check completion
       if (this.currentStep >= this.levelData.steps.length) {
         this.completed = true;
         setTimeout(() => {
@@ -147,7 +154,15 @@ export class FollowStepsMechanic {
   }
 
   update(dt) {
-    this.stepObjects.forEach(obj => obj.update(dt));
+    this.stepObjects.forEach(btn => btn.update(dt));
+    // Update item sprite positions to follow their buttons
+    this.itemSprites.forEach((sprite, i) => {
+      const btn = this.stepObjects[i];
+      if (sprite && btn) {
+        sprite.x = btn.x + btn.width / 2 - (sprite.width * sprite.scale) / 2;
+        sprite.y = btn.y + 6;
+      }
+    });
   }
 
   render(ctx) {
@@ -157,13 +172,21 @@ export class FollowStepsMechanic {
     ctx.textAlign = 'center';
     ctx.fillText(this.levelData.instruction, this.w / 2, this.h * 0.18);
 
-    // Current step indicator
+    // Current step indicator with pixel art icon
     if (!this.completed) {
       ctx.fillStyle = '#8D6E63';
       ctx.font = "bold 20px 'Nunito', sans-serif";
       const stepName = this.levelData.steps[this.currentStep];
-      const stepEmoji = this.levelData.stepEmojis?.[this.currentStep] || '';
-      ctx.fillText(`Paso ${this.currentStep + 1}: ${stepEmoji} ${stepName}`, this.w / 2, this.h * 0.28);
+      ctx.fillText(`Paso ${this.currentStep + 1}: ${stepName}`, this.w / 2, this.h * 0.28);
+
+      // Draw current step item sprite next to text
+      const currentSprite = this.itemSprites[this.currentStep];
+      if (currentSprite) {
+        const textWidth = ctx.measureText(`Paso ${this.currentStep + 1}: ${stepName}`).width;
+        currentSprite.x = this.w / 2 + textWidth / 2 + 10;
+        currentSprite.y = this.h * 0.28 - 20;
+        currentSprite.render(ctx);
+      }
     }
 
     // Drop zone
@@ -177,11 +200,10 @@ export class FollowStepsMechanic {
       obj.render(ctx);
       ctx.globalAlpha = 1;
 
-      // Emoji below
-      if (obj.stepEmoji && obj.visible) {
-        ctx.font = '24px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(obj.stepEmoji, obj.x + obj.width / 2, obj.y + obj.height + 20);
+      // Pixel art item icon on the button
+      const sprite = this.itemSprites[i];
+      if (sprite && obj.visible) {
+        sprite.render(ctx);
       }
     });
 
@@ -198,10 +220,8 @@ export class FollowStepsMechanic {
     for (const drag of this.draggables) {
       if (drag.entity.isAvailable && drag.startDrag(x, y)) return true;
     }
-    // Check if touching unavailable object
     for (const drag of this.draggables) {
       if (!drag.entity.isAvailable && drag.entity.contains(x, y)) {
-        // Show "wait" feedback
         return true;
       }
     }

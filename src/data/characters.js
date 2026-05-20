@@ -5,74 +5,68 @@
 export const characters = {
   mama: {
     name: 'Mamá',
-    emoji: '👩',
     style: 'caring',
     color: '#FF9AA2',
     messages: [
-      '¡Ay, qué bien, Paula! ¡Qué bueno que curaste al {animal} con {treatment}! Estoy muy orgullosa de ti. ❤️',
-      '¡Mi veterinaria favorita! El {animal} debe estar muy feliz contigo, Paula. 🌟',
-      '¡Qué cuidadosa eres, Paula! El {animal} tiene mucha suerte de que lo hayas encontrado. 💕',
-      '¡Increíble, Paula! Cada día eres una mejor veterinaria. El {animal} te lo agradece mucho. 🌸'
+      '¡Ay, qué bien, Paula! ¡Qué bueno que curaste al {animal} con {treatment}! Estoy muy orgullosa de ti.',
+      '¡Mi veterinaria favorita! El {animal} debe estar muy feliz contigo, Paula.',
+      '¡Qué cuidadosa eres, Paula! El {animal} tiene mucha suerte de que lo hayas encontrado.',
+      '¡Increíble, Paula! Cada día eres una mejor veterinaria. El {animal} te lo agradece mucho.'
     ]
   },
   papa: {
     name: 'Papá',
-    emoji: '👨',
     style: 'playful',
     color: '#A0E7E5',
     messages: [
-      '¡Wooo, Paula! ¡Eres la mejor veterinaria del mundo! El {animal} está súper feliz. 🎉',
-      '¡Ja! ¡Ningún {animal} herido se escapa de mis garras... digo, de TUS garras, veterinaria Paula! 😄',
-      '¡Alto nivel, doctora Paula! Ese {animal} va a contarle a todos que lo curó una veterinaria estrella. ⭐',
-      '¡Qué habilidad, Paula! Si sigues así vas a tener una clínica con fila de animales. 🏥🐾'
+      '¡Wooo, Paula! ¡Eres la mejor veterinaria del mundo! El {animal} está súper feliz.',
+      '¡Ja! ¡Ningún {animal} herido se escapa de mis garras... digo, de TUS garras, veterinaria Paula!',
+      '¡Alto nivel, doctora Paula! Ese {animal} va a contarle a todos que lo curó una veterinaria estrella.',
+      '¡Qué habilidad, Paula! Si sigues así vas a tener una clínica con fila de animales.'
     ]
   },
   abuelo: {
     name: 'Abuelo',
-    emoji: '👴',
     style: 'wise',
     color: '#C7CEEA',
     messages: [
-      'Muy bien hecho, Paula. Cuidar a los animales es una de las cosas más nobles que puede hacer una persona. 🌿',
-      'El {animal} está agradecido, Paula. En mi tiempo también había veterinarias muy valientes como tú. 📖',
-      'Sabia decisión, Paula. El {animal} necesitaba exactamente eso: {treatment}. Buen trabajo. 🍃',
-      'Cada animal que curas te hace más sabia, Paula. Sigue así, pequeña veterinaria. 🌳'
+      'Muy bien hecho, Paula. Cuidar a los animales es una de las cosas más nobles que puede hacer una persona.',
+      'El {animal} está agradecido, Paula. En mi tiempo también había veterinarias muy valientes como tú.',
+      'Sabia decisión, Paula. El {animal} necesitaba exactamente eso: {treatment}. Buen trabajo.',
+      'Cada animal que curas te hace más sabia, Paula. Sigue así, pequeña veterinaria.'
     ]
   },
   abuela: {
     name: 'Abuela',
-    emoji: '👵',
     style: 'sweet',
     color: '#FFB7B2',
     messages: [
-      '¡Ay, mi niña hermosa! El {animal} debe sentirse tan mejor contigo. Eres un angelito. 🤗',
-      '¡Qué emoción verte curar al {animal}, Paula! Tienes un corazón enorme. 💗',
-      'Mi niña veterinaria... el {animal} te va a recordar siempre con cariño. Muy bien hecho. 🌺',
-      '¡Qué alegría me da verte ayudar al {animal}! Eres una niña muy especial, Paula. 🦋'
+      '¡Ay, mi niña hermosa! El {animal} debe sentirse tan mejor contigo. Eres un angelito.',
+      '¡Qué emoción verte curar al {animal}, Paula! Tienes un corazón enorme.',
+      'Mi niña veterinaria... el {animal} te va a recordar siempre con cariño. Muy bien hecho.',
+      '¡Qué alegría me da verte ayudar al {animal}! Eres una niña muy especial, Paula.'
     ]
   },
   bubu: {
     name: 'Bubu',
-    emoji: '🧔',
     style: 'energetic',
     color: '#E2F0CB',
     messages: [
-      '¡BOOM! ¡Paula la veterinaria en acción! Ese {animal} no sabía lo que le esperaba. 💪',
-      '¡Wujuuu! ¡La doctora Paula lo hizo de nuevo! El {animal} está bailando de felicidad. 🕺',
-      '¡Esa es mi sobrina! Curando {animal}s por toda la ciudad. ¡Eres imparable! 🚀',
-      '¡Alerta de veterinaria increíble! Paula acaba de salvar a un {animal}. ¡Noticia de última hora! 📰😆'
+      '¡BOOM! ¡Paula la veterinaria en acción! Ese {animal} no sabía lo que le esperaba.',
+      '¡Wujuuu! ¡La doctora Paula lo hizo de nuevo! El {animal} está bailando de felicidad.',
+      '¡Esa es mi sobrina! Curando {animal}s por toda la ciudad. ¡Eres imparable!',
+      '¡Alerta de veterinaria increíble! Paula acaba de salvar a un {animal}. ¡Noticia de última hora!'
     ]
   },
   bibi: {
     name: 'Bibi',
-    emoji: '👱‍♂️',
     style: 'creative',
     color: '#FFDac1',
     messages: [
-      '¡Qué creativa eres, Paula! Curaste al {animal} de una forma que ni yo hubiera pensado. 🎨',
-      '¿Sabías que el {animal} te va a dibujar un retrato? Porque eres su heroína favorita. 🖼️',
-      '¡Paula, descubriste el tratamiento perfecto! Eres como una científica veterinaria. 🔬✨',
-      'El {animal} ahora quiere ser veterinario como tú, Paula. ¡Le inspiraste! 🌈'
+      '¡Qué creativa eres, Paula! Curaste al {animal} de una forma que ni yo hubiera pensado.',
+      '¿Sabías que el {animal} te va a dibujar un retrato? Porque eres su heroína favorita.',
+      '¡Paula, descubriste el tratamiento perfecto! Eres como una científica veterinaria.',
+      'El {animal} ahora quiere ser veterinario como tú, Paula. ¡Le inspiraste!'
     ]
   }
 };

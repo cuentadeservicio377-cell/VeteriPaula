@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { getProgress, completeLevel, resetProgress } from './utils/storage.js';
 import { getLevel, getTotalLevels, getBlocks, getBlockForLevel } from './data/levels-v2.js';
 import { getCharacterForLevel } from './data/characters.js';
@@ -7,6 +7,7 @@ import MapScreen from './components/screens/MapScreen.jsx';
 import LoadingScreen from './components/screens/LoadingScreen.jsx';
 import CelebrationScreen from './components/screens/CelebrationScreen.jsx';
 import GameCanvas from './components/game/GameCanvas.jsx';
+import { getIconSpriteUrl } from './hooks/usePixelArt.js';
 
 function App() {
   const [screen, setScreen] = useState('home');
@@ -14,6 +15,8 @@ function App() {
   const [progress, setProgress] = useState(getProgress());
   const [levelData, setLevelData] = useState(null);
   const [nextBiome, setNextBiome] = useState('clinica');
+
+  const homeIconUrl = useMemo(() => getIconSpriteUrl('arrowLeft', 4), []);
 
   const startGame = useCallback((levelId) => {
     const data = getLevel(levelId);
@@ -76,7 +79,20 @@ function App() {
       return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
           <GameCanvas levelData={levelData} onComplete={handleLevelComplete} onFail={() => {}} />
-          <button onClick={() => setScreen('home')} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '12px', padding: '8px 16px', fontSize: '1rem', cursor: 'pointer', zIndex: 10 }}>🏠</button>
+          <button onClick={() => setScreen('home')} style={{
+            position: 'absolute', top: '10px', right: '10px',
+            background: 'rgba(255,255,255,0.9)', border: 'none',
+            borderRadius: '12px', padding: '8px', cursor: 'pointer', zIndex: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {homeIconUrl && (
+              <img src={homeIconUrl} alt="Inicio" style={{
+                width: '24px', height: '24px',
+                imageRendering: 'pixelated',
+                transform: 'rotate(-180deg)',
+              }} />
+            )}
+          </button>
         </div>
       );
     case 'celebration':

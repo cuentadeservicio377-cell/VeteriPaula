@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { levels } from '../../data/levels-v2.js';
+import { getBiomeSpriteUrl, getIconSpriteUrl, getAnimalSpriteUrl } from '../../hooks/usePixelArt.js';
 
 export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
   const grouped = useMemo(() => {
@@ -14,17 +15,47 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
   const isUnlocked = (levelId) => levelId <= progress.currentLevel;
   const isCompleted = (levelId) => progress.completedLevels.includes(levelId);
 
+  // Pre-generate sprite URLs
+  const [spriteUrls, setSpriteUrls] = useState({});
+
+  useEffect(() => {
+    const urls = {};
+    blocks.forEach(block => {
+      urls[`biome_${block.biome}`] = getBiomeSpriteUrl(block.biome, 4);
+    });
+    urls.arrowLeft = getIconSpriteUrl('arrowLeft', 4);
+    urls.star = getIconSpriteUrl('star', 4);
+    urls.lock = getIconSpriteUrl('lock', 4);
+    urls.check = getIconSpriteUrl('check', 4);
+    levels.forEach(l => {
+      urls[`animal_${l.animal}`] = getAnimalSpriteUrl(l.animal, 3);
+    });
+    setSpriteUrls(urls);
+  }, [blocks]);
+
+  const imgStyle = {
+    imageRendering: 'pixelated',
+    display: 'block',
+  };
+
   return (
     <div className="screen-container" style={{ background: '#FFF8F0', overflowY: 'auto', justifyContent: 'flex-start', paddingTop: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '24px', width: '100%', maxWidth: '600px' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', fontSize: '2rem', cursor: 'pointer', padding: '8px' }}>⬅️</button>
-        <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', color: '#5D4037', margin: 0 }}>🗺️ Mapa de Aventuras</h2>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+          {spriteUrls.arrowLeft && (
+            <img src={spriteUrls.arrowLeft} alt="Atrás" style={{ ...imgStyle, width: '32px', height: '32px' }} />
+          )}
+        </button>
+        <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', color: '#5D4037', margin: 0 }}>
+          Mapa de Aventuras
+        </h2>
       </div>
 
       {blocks.map(block => {
         const blockLevels = grouped[block.id] || [];
         const isBlockUnlocked = blockLevels.some(l => isUnlocked(l.id));
         const isBlockComplete = blockLevels.every(l => isCompleted(l.id));
+        const biomeUrl = spriteUrls[`biome_${block.biome}`];
 
         return (
           <div key={block.id} style={{
@@ -36,16 +67,24 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
             opacity: isBlockUnlocked ? 1 : 0.6,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '2rem' }}>{block.emoji}</span>
+              {biomeUrl && (
+                <img src={biomeUrl} alt={block.name} style={{ ...imgStyle, width: '48px', height: '48px' }} />
+              )}
               <h3 style={{ margin: 0, fontSize: '1.3rem', color: block.color }}>{block.name}</h3>
-              {isBlockComplete && <span style={{ fontSize: '1.2rem' }}>✅</span>}
-              {!isBlockUnlocked && <span style={{ fontSize: '1.2rem' }}>🔒</span>}
+              {isBlockComplete && spriteUrls.check && (
+                <img src={spriteUrls.check} alt="Completado" style={{ ...imgStyle, width: '24px', height: '24px' }} />
+              )}
+              {!isBlockUnlocked && spriteUrls.lock && (
+                <img src={spriteUrls.lock} alt="Bloqueado" style={{ ...imgStyle, width: '24px', height: '24px' }} />
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '10px' }}>
               {blockLevels.map(level => {
                 const unlocked = isUnlocked(level.id);
                 const completed = isCompleted(level.id);
+                const animalUrl = spriteUrls[`animal_${level.animal}`];
+
                 return (
                   <button key={level.id} onClick={() => unlocked && onSelectLevel(level.id)}
                     disabled={!unlocked}
@@ -63,7 +102,13 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
                     onMouseEnter={(e) => unlocked && (e.target.style.transform = 'scale(1.12)')}
                     onMouseLeave={(e) => unlocked && (e.target.style.transform = 'scale(1)')}
                   >
-                    {completed ? '⭐' : level.emoji}
+                    {completed && spriteUrls.star ? (
+                      <img src={spriteUrls.star} alt="Completado" style={{ ...imgStyle, width: '28px', height: '28px' }} />
+                    ) : animalUrl ? (
+                      <img src={animalUrl} alt={level.animal} style={{ ...imgStyle, width: '36px', height: '32px' }} />
+                    ) : (
+                      level.id
+                    )}
                   </button>
                 );
               })}

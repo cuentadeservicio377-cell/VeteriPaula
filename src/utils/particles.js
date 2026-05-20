@@ -27,31 +27,35 @@ export class ParticleSystem {
   }
 
   spawnHearts(x, y, count = 15) {
+    const colors = ['#FF6B6B', '#FF9AA2', '#FFB7B2', '#FF8A80', '#E57373'];
     for (let i = 0; i < count; i++) {
       this.particles.push({
         x, y,
         vx: (Math.random() - 0.5) * 350,
         vy: -Math.random() * 450 - 120,
-        size: 16 + Math.random() * 18,
-        emoji: ['❤️', '💖', '💕', '💗', '💝', '💘'][Math.floor(Math.random() * 6)],
+        size: 10 + Math.random() * 12,
+        color: colors[Math.floor(Math.random() * colors.length)],
         life: 2.5 + Math.random(),
         maxLife: 2.5 + Math.random(),
-        type: 'emoji',
+        type: 'heart',
       });
     }
   }
 
   spawnStars(x, y, count = 20) {
+    const colors = ['#FFE66D', '#FFD700', '#FFF59D', '#FFF176', '#FFEE58'];
     for (let i = 0; i < count; i++) {
       this.particles.push({
         x, y,
         vx: (Math.random() - 0.5) * 600,
         vy: -Math.random() * 600 - 180,
-        size: 12 + Math.random() * 16,
-        emoji: ['⭐', '✨', '🌟', '💫', '🌠'][Math.floor(Math.random() * 5)],
+        size: 8 + Math.random() * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 8,
         life: 2 + Math.random(),
         maxLife: 2 + Math.random(),
-        type: 'emoji',
+        type: 'star',
       });
     }
   }
@@ -107,9 +111,14 @@ export class ParticleSystem {
       const opacity = Math.max(0, 1 - progress * progress);
       ctx.save(); ctx.globalAlpha = opacity;
 
-      if (p.type === 'emoji') {
-        ctx.font = `${p.size}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.fillText(p.emoji, p.x, p.y);
+      if (p.type === 'heart') {
+        this.drawPixelHeart(ctx, p.x, p.y, p.size, p.color);
+      } else if (p.type === 'star') {
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation || 0);
+        this.drawPixelStar(ctx, 0, 0, p.size, p.color);
+        ctx.rotate(-(p.rotation || 0));
+        ctx.translate(-p.x, -p.y);
       } else if (p.type === 'confetti') {
         ctx.translate(p.x, p.y); ctx.rotate(p.rotation || 0);
         ctx.fillStyle = p.color;
@@ -121,6 +130,50 @@ export class ParticleSystem {
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
+    }
+  }
+
+  // Draw a pixel-art heart shape
+  drawPixelHeart(ctx, cx, cy, size, color) {
+    const s = size / 5;
+    ctx.fillStyle = color;
+    const pixelMap = [
+      [0,1,0,1,0],
+      [1,1,1,1,1],
+      [1,1,1,1,1],
+      [0,1,1,1,0],
+      [0,0,1,0,0],
+    ];
+    const offsetX = cx - (5 * s) / 2;
+    const offsetY = cy - (5 * s) / 2;
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        if (pixelMap[row][col]) {
+          ctx.fillRect(offsetX + col * s, offsetY + row * s, s + 0.5, s + 0.5);
+        }
+      }
+    }
+  }
+
+  // Draw a pixel-art star shape
+  drawPixelStar(ctx, cx, cy, size, color) {
+    const s = size / 5;
+    ctx.fillStyle = color;
+    const pixelMap = [
+      [0,0,1,0,0],
+      [0,1,1,1,0],
+      [1,1,1,1,1],
+      [0,1,1,1,0],
+      [0,0,1,0,0],
+    ];
+    const offsetX = cx - (5 * s) / 2;
+    const offsetY = cy - (5 * s) / 2;
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        if (pixelMap[row][col]) {
+          ctx.fillRect(offsetX + col * s, offsetY + row * s, s + 0.5, s + 0.5);
+        }
+      }
     }
   }
 }

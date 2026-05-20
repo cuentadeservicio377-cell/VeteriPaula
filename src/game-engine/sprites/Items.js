@@ -1,0 +1,217 @@
+/**
+ * Pixel art item sprites for treatments and step objects
+ * Avatar World style: blocky, simple, vibrant
+ */
+
+import { PixelSprite, PALETTE } from '../entities/PixelSprite.js';
+
+// Water drop 💧
+const WATER_PIXELS = [
+  'TTTC3TTC3TT',
+  'TTC3C3TC3C3T',
+  'TC3C3C3C3C3C3T',
+  'TC3C3C3C3C3C3T',
+  'TTC3C3C3C3C3TT',
+  'TTTC3C3C3C3TTT',
+  'TTTTC3C3C3TTTT',
+  'TTTTTC3C3TTTTT',
+  'TTTTTTC3TTTTTT',
+];
+
+// Bandage / venda 🩹
+const BANDAGE_PIXELS = [
+  'TTTC2C2C2C2C2TT',
+  'TTC2C2C2C2C2C2C2T',
+  'TC2C2R1C2C2R1C2C2T',
+  'TC2C2C2C2C2C2C2C2T',
+  'TTC2C2R1C2C2R1C2TT',
+  'TTTC2C2C2C2C2C2TTT',
+  'TTTTC2C2C2C2C2TTTT',
+];
+
+// Tweezers / pinzas 🔧
+const TWEEZERS_PIXELS = [
+  'TTTTTA4A4TTTTT',
+  'TTTTA4A4A4A4TTTT',
+  'TTTA4A4TTA4A4TTT',
+  'TTA4A4TTTTA4A4TT',
+  'TTA4A4TTTTTA4A4T',
+  'TTTA4TTTTTTA4TTT',
+  'TTTTTTTTTTTTTTTT',
+];
+
+// Pill / pastilla 💊
+const PILL_PIXELS = [
+  'TTTR1R1R1R1TTT',
+  'TTR1R1R1R1R1R1TT',
+  'TR1R1C2C2R1R1R1T',
+  'TR1R1C2C2R1R1R1T',
+  'TTR1R1R1R1R1R1TT',
+  'TTTR1R1R1R1TTTT',
+];
+
+// Sleep / reposo 😴
+const SLEEP_PIXELS = [
+  'TTTTTTTTTTTTTT',
+  'TTTA4A4A4A4A4TT',
+  'TTA4A4A4A4A4A4T',
+  'TTA4E1E1TTE1E1A4T',
+  'TTA4E1E1TTE1E1A4T',
+  'TTA4A4TTTTA4A4A4T',
+  'TTTA4A4A4A4A4TTT',
+];
+
+// Towel / toalla 🧣
+const TOWEL_PIXELS = [
+  'TTTC1C1C1C1C1TT',
+  'TTC1C1C1C1C1C1C1T',
+  'TC1C1C1C1C1C1C1C1T',
+  'TC1C1C1C1C1C1C1C1T',
+  'TTC1C1C1C1C1C1C1TT',
+  'TTTC1C1C1C1C1C1TTT',
+];
+
+// Coat / abrigo 🧥
+const COAT_PIXELS = [
+  'TTTC4C4C4C4C4TT',
+  'TTC4C4C4C4C4C4C4T',
+  'TC4C4C2C2C4C4C4C4T',
+  'TC4C4C2C2C4C4C4C4T',
+  'TC4C4C4C4C4C4C4C4T',
+  'TTC4C4C4C4C4C4C4TT',
+  'TTTC4C4C4C4C4C4TTT',
+];
+
+// Fire / calor 🔥
+const FIRE_PIXELS = [
+  'TTTTY1Y1Y1TTT',
+  'TTTY1Y1Y1Y1Y1TT',
+  'TTY1O1Y1Y1O1Y1T',
+  'TY1O1O1Y1O1O1Y1T',
+  'TY1O1O1O1O1O1Y1T',
+  'TTY1O1O1O1O1Y1TT',
+  'TTTY1Y1Y1Y1Y1TTT',
+];
+
+// Brush / cepillo 🪥
+const BRUSH_PIXELS = [
+  'TTTTTC2C2C2TTTTT',
+  'TTTTC2C2C2C2C2TTT',
+  'TTTC2C2C2C2C2C2TTT',
+  'TTTTTA4A4A4A4TTTT',
+  'TTTTTA4A4A4A4A4TTT',
+  'TTTTTTA4A4A4A4TTTT',
+];
+
+// Sun / sol ☀️
+const SUN_PIXELS = [
+  'TTY1TTTY1TTTY1TT',
+  'TTTTY1Y1Y1Y1TTTT',
+  'TY1Y1Y1O1Y1Y1Y1T',
+  'TTY1Y1O1O1Y1Y1TT',
+  'TTY1Y1O1O1Y1Y1TT',
+  'TY1Y1Y1O1Y1Y1Y1T',
+  'TTTTY1Y1Y1Y1TTTT',
+  'TTY1TTTY1TTTY1TT',
+];
+
+// Hug / abrazo 🤗
+const HUG_PIXELS = [
+  'TTTC1TTC1TTC1TT',
+  'TTC1C1TC1C1C1C1T',
+  'TC1C1C1C1C1C1C1C1T',
+  'TC1C1C1C1C1C1C1C1T',
+  'TTC1C1C1C1C1C1C1TT',
+  'TTTC1C1C1C1C1C1TTT',
+];
+
+// Sponge / esponja 🧽
+const SPONGE_PIXELS = [
+  'TTY1Y1Y1Y1Y1Y1TT',
+  'TY1Y1Y1Y1Y1Y1Y1T',
+  'TY1Y1O1Y1O1Y1Y1T',
+  'TY1Y1Y1O1Y1Y1Y1T',
+  'TTY1Y1Y1Y1Y1Y1TT',
+  'TTTY1Y1Y1Y1Y1TTT',
+];
+
+// Sound icon 🔊
+const SOUND_PIXELS = [
+  'TTTA4A4TTTTTTT',
+  'TTA4A4A4TTTTTT',
+  'A4A4A4A4A4A4A4T',
+  'A4A4A4A4A4A4A4T',
+  'A4A4A4A4A4A4A4T',
+  'TTA4A4A4TTTTTT',
+  'TTTA4A4TTTTTTT',
+];
+
+// Home icon 🏠
+const HOME_PIXELS = [
+  'TTTTR1TTR1TTTT',
+  'TTR1R1R1R1R1TT',
+  'TR1R1R1R1R1R1R1T',
+  'TR1C2C2C2C2C2R1T',
+  'TR1C2C2C3C2C2R1T',
+  'TR1C2C2C2C2C2R1T',
+  'TR1C2C2C2C2C2R1T',
+];
+
+// Star ⭐ (for level completion)
+const STAR_PIXELS = [
+  'TTTTY1TTTT',
+  'TTTY1Y1Y1TT',
+  'TTY1Y1Y1Y1T',
+  'Y1Y1Y1Y1Y1Y1',
+  'TTY1Y1Y1Y1T',
+  'TTTY1Y1Y1TT',
+  'TTTTY1TTTT',
+];
+
+export const ITEM_DEFS = {
+  agua: WATER_PIXELS,
+  venda: BANDAGE_PIXELS,
+  pinzas: TWEEZERS_PIXELS,
+  medicina: PILL_PIXELS,
+  reposo: SLEEP_PIXELS,
+  toalla: TOWEL_PIXELS,
+  abrigo: COAT_PIXELS,
+  calor: FIRE_PIXELS,
+  cepillo: BRUSH_PIXELS,
+  sol: SUN_PIXELS,
+  abrazo: HUG_PIXELS,
+  lava: WATER_PIXELS,
+  seca: SPONGE_PIXELS,
+  esponja: SPONGE_PIXELS,
+  sound: SOUND_PIXELS,
+  home: HOME_PIXELS,
+  star: STAR_PIXELS,
+};
+
+export function createItemSprite(type, x, y, scale = 4) {
+  const def = ITEM_DEFS[type];
+  if (!def) return null;
+  const pixels = def.map(l => l.trim().split(''));
+  return new PixelSprite({ pixels, palette: PALETTE }, { x, y, scale });
+}
+
+export function getItemTypes() {
+  return Object.keys(ITEM_DEFS);
+}
+
+// Mapping from step names to sprite types
+export const STEP_TO_SPRITE = {
+  'AGUA': 'agua',
+  'PINZAS': 'pinzas',
+  'VENDA': 'venda',
+  'LAVA': 'agua',
+  'SECA': 'esponja',
+  'TOALLA': 'toalla',
+  'ABRIGO': 'abrigo',
+  'CALOR': 'calor',
+  'MEDICINA': 'medicina',
+  'REPOSO': 'reposo',
+  'CEPILLO': 'cepillo',
+  'SOL': 'sol',
+  'ABRAZO': 'abrazo',
+};

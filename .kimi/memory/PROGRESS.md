@@ -55,11 +55,13 @@
 - [x] Fondos temáticos por bioma
 - [x] Paleta de colores por bloque
 - [x] Mapa de niveles con bloques visuales
+- [x] **Pixel art Avatar World style** — Paula, 19 animales, flores, decoraciones
+- [x] Sistema de sprites Canvas 2D (matrix → scaled pixels)
+- [x] Animaciones por frames (idle bob, celebrate bounce, hurt sway)
 
 ## Features Pendientes v2.x
 - [ ] Sonidos de fonética por letra
 - [ ] Música ambiental por bloque
-- [ ] Arte final (sprites profesionales o Rive)
 - [ ] Sistema de estrellas por nivel
 - [ ] Galería de animales curados
 - [ ] Testing con Playwright

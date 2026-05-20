@@ -8,7 +8,7 @@ export const levels = [
   {
     id: 1, biome: 'clinica', block: 1,
     title: 'El perrito lastimado',
-    animal: 'perro', emoji: '🐕', injury: 'pata',
+    animal: 'perro', injury: 'pata',
     mechanic: 'tap_word',
     instruction: 'El perrito tiene la pata lastimada. Toca la palabra que necesita:',
     options: ['VENDA', 'HUESO'],
@@ -21,7 +21,7 @@ export const levels = [
   {
     id: 2, biome: 'clinica', block: 1,
     title: 'El gatito sucio',
-    animal: 'gato', emoji: '🐈', injury: 'oreja',
+    animal: 'gato', injury: 'oreja',
     mechanic: 'tap_word',
     instruction: 'El gatito tiene las orejas sucias. Toca lo que necesita:',
     options: ['AGUA', 'COMIDA'],
@@ -34,7 +34,7 @@ export const levels = [
   {
     id: 3, biome: 'clinica', block: 1,
     title: 'El conejito enfermo',
-    animal: 'conejo', emoji: '🐇', injury: 'ojo',
+    animal: 'conejo', injury: 'ojo',
     mechanic: 'tap_word',
     instruction: 'El conejito tiene el ojo irritado. ¿Qué necesita?',
     options: ['MEDICINA', 'ZANAHORIA', 'JUGUETE'],
@@ -47,7 +47,7 @@ export const levels = [
   {
     id: 4, biome: 'clinica', block: 1,
     title: 'El pajarito herido',
-    animal: 'pajaro', emoji: '🐦', injury: 'ala',
+    animal: 'pajaro', injury: 'ala',
     mechanic: 'drag_syllables',
     instruction: 'El pajarito tiene el ala rota. Arrastra las sílabas para formar la palabra:',
     syllables: ['A', 'LA'],
@@ -61,11 +61,10 @@ export const levels = [
   {
     id: 5, biome: 'clinica', block: 1,
     title: 'La tortuga descuidada',
-    animal: 'tortuga', emoji: '🐢', injury: 'caparazon',
+    animal: 'tortuga', injury: 'caparazon',
     mechanic: 'follow_steps',
     instruction: 'La tortuguita tiene el caparazón sucio. Sigue los pasos:',
     steps: ['LAVA', 'SECA'],
-    stepEmojis: ['💧', '🧽'],
     treatment: 'lavar y secar el caparazón',
     newSounds: ['revisión'],
     tip: 'Primero agua, luego secar',
@@ -77,7 +76,7 @@ export const levels = [
   {
     id: 6, biome: 'granja', block: 2,
     title: 'La vaquita sedienta',
-    animal: 'vaca', emoji: '🐄', injury: 'sed',
+    animal: 'vaca', injury: 'sed',
     mechanic: 'drag_syllables',
     instruction: 'La vaquita tiene mucha sed. Forma la palabra:',
     syllables: ['A', 'GUA'],
@@ -91,7 +90,7 @@ export const levels = [
   {
     id: 7, biome: 'granja', block: 2,
     title: 'La gallinita sin plumas',
-    animal: 'gallina', emoji: '🐔', injury: 'plumas',
+    animal: 'gallina', injury: 'plumas',
     mechanic: 'drag_syllables',
     instruction: 'La gallinita perdió plumas. Forma la palabra:',
     syllables: ['GA', 'LLI', 'NA'],
@@ -105,7 +104,7 @@ export const levels = [
   {
     id: 8, biome: 'granja', block: 2,
     title: 'El caballito cojo',
-    animal: 'caballo', emoji: '🐴', injury: 'pata',
+    animal: 'caballo', injury: 'pata',
     mechanic: 'drag_syllables',
     instruction: 'El caballito tiene la pata torcida. Forma la palabra:',
     syllables: ['VEN', 'DA'],
@@ -119,7 +118,7 @@ export const levels = [
   {
     id: 9, biome: 'granja', block: 2,
     title: 'La ovejita enredada',
-    animal: 'oveja', emoji: '🐑', injury: 'lana',
+    animal: 'oveja', injury: 'lana',
     mechanic: 'drag_syllables',
     instruction: 'La ovejita tiene la lana enredada. Forma la palabra:',
     syllables: ['CE', 'PI', 'LLO'],
@@ -133,11 +132,10 @@ export const levels = [
   {
     id: 10, biome: 'granja', block: 2,
     title: 'El patito mojado',
-    animal: 'pato', emoji: '🦆', injury: 'frío',
+    animal: 'pato', injury: 'frío',
     mechanic: 'follow_steps',
     instruction: 'El patito tiene frío. Sigue los pasos para abrigarlo:',
     steps: ['TOALLA', 'ABRIGO', 'CALOR'],
-    stepEmojis: ['🧣', '🧥', '🔥'],
     treatment: 'toalla, abrigo y calor',
     newSounds: ['/t/'],
     tip: 'Primero secar, luego abrigar',
@@ -149,11 +147,10 @@ export const levels = [
   {
     id: 11, biome: 'bosque', block: 3,
     title: 'El zorrito valiente',
-    animal: 'zorro', emoji: '🦊', injury: 'pata',
+    animal: 'zorro', injury: 'pata',
     mechanic: 'follow_steps_drag',
     instruction: 'El zorrito tiene una espina en la pata. Arrastra los objetos en orden:',
     steps: ['AGUA', 'PINZAS', 'VENDA'],
-    stepEmojis: ['💧', '🔧', '🩹'],
     treatment: 'lavar, quitar espina y vendar',
     newSounds: ['/z/', '/rr/'],
     tip: 'Primero limpiar, luego quitar, al final proteger',
@@ -162,7 +159,7 @@ export const levels = [
   {
     id: 12, biome: 'bosque', block: 3,
     title: 'La ardilla distraída',
-    animal: 'ardilla', emoji: '🐿️', injury: 'cola',
+    animal: 'ardilla', injury: 'cola',
     mechanic: 'drag_syllables',
     instruction: 'La ardilla se raspó la cola. Forma la palabra mágica:',
     syllables: ['CU', 'RA'],
@@ -176,7 +173,7 @@ export const levels = [
   {
     id: 13, biome: 'bosque', block: 3,
     title: 'El erizo espinoso',
-    animal: 'erizo', emoji: '🦔', injury: 'espinas',
+    animal: 'erizo', injury: 'espinas',
     mechanic: 'tap_word',
     instruction: 'El erizo tiene espinas rotas. Toca lo que necesita:',
     options: ['COMIDA', 'AGUA', 'ABRAZO'],
@@ -189,11 +186,10 @@ export const levels = [
   {
     id: 14, biome: 'bosque', block: 3,
     title: 'El búho sabio',
-    animal: 'buho', emoji: '🦉', injury: 'ojo',
+    animal: 'buho', injury: 'ojo',
     mechanic: 'follow_steps_drag',
     instruction: 'El búho no ve bien. Arrastra los objetos en orden:',
     steps: ['AGUA', 'MEDICINA', 'REPOSO'],
-    stepEmojis: ['💧', '💊', '😴'],
     treatment: 'lavar, medicina y descanso oscuro',
     newSounds: ['/b/'],
     tip: 'Primero limpiar, luego curar, al final descansar',
@@ -202,7 +198,7 @@ export const levels = [
   {
     id: 15, biome: 'bosque', block: 3,
     title: 'El ciervo elegante',
-    animal: 'ciervo', emoji: '🦌', injury: 'cuernos',
+    animal: 'ciervo', injury: 'cuernos',
     mechanic: 'drag_syllables',
     instruction: 'El ciervo raspó sus cuernos. Forma la palabra:',
     syllables: ['SA', 'LU', 'DA'],
@@ -219,7 +215,7 @@ export const levels = [
   {
     id: 16, biome: 'selva', block: 4,
     title: 'El mono travieso',
-    animal: 'mono', emoji: '🐵', injury: 'cabeza',
+    animal: 'mono', injury: 'cabeza',
     mechanic: 'read_sentence_drag',
     instruction: 'Lee la frase y arrastra el objeto: "El mono tiene hambre."',
     sentence: ['El', 'mono', 'tiene', 'hambre'],
@@ -234,7 +230,7 @@ export const levels = [
   {
     id: 17, biome: 'selva', block: 4,
     title: 'El tucán colorido',
-    animal: 'tucan', emoji: '🐦', injury: 'pico',
+    animal: 'tucan', injury: 'pico',
     mechanic: 'read_sentence',
     instruction: 'Lee la frase: "El tucán tiene la pata torcida." Toca el tratamiento:',
     sentence: ['El', 'tucán', 'tiene', 'la', 'pata', 'torcida'],
@@ -248,7 +244,7 @@ export const levels = [
   {
     id: 18, biome: 'selva', block: 4,
     title: 'El jaguar fuerte',
-    animal: 'jaguar', emoji: '🐆', injury: 'pata',
+    animal: 'jaguar', injury: 'pata',
     mechanic: 'drag_syllables',
     instruction: 'El jaguar tiene la pata lastimada. Forma la palabra:',
     syllables: ['JA', 'GUAR'],
@@ -262,12 +258,11 @@ export const levels = [
   {
     id: 19, biome: 'selva', block: 4,
     title: 'La tortuga marina',
-    animal: 'tortuga', emoji: '🐢', injury: 'caparazon',
+    animal: 'tortuga', injury: 'caparazon',
     mechanic: 'read_sentence_drag',
     instruction: 'Lee: "La tortuga marina necesita ayuda." Arrastra los objetos:',
     sentence: ['La', 'tortuga', 'marina', 'necesita', 'ayuda'],
     steps: ['AGUA', 'CEPILLO', 'SOL'],
-    stepEmojis: ['💧', '🪥', '☀️'],
     treatment: 'lavar, cepillar y dar sol',
     newSounds: ['/n/'],
     tip: 'Primero limpiar, luego cepillar, al final sol',
@@ -276,7 +271,7 @@ export const levels = [
   {
     id: 20, biome: 'selva', block: 4,
     title: '¡La fiesta de todos!',
-    animal: 'delfin', emoji: '🐬', injury: 'aleta',
+    animal: 'delfin', injury: 'aleta',
     mechanic: 'final_boss',
     instruction: '¡El delfín tiene la aleta cortada! Lee, forma y cura:',
     sentence: ['El', 'delfín', 'tiene', 'la', 'aleta', 'cortada'],
@@ -284,7 +279,6 @@ export const levels = [
     target: 'VENDA',
     slots: 2,
     steps: ['LAVA', 'VENDA', 'ABRAZO'],
-    stepEmojis: ['💧', '🩹', '🤗'],
     treatment: 'lavar, vendar y un abrazo',
     newSounds: ['revisión final'],
     tip: '¡Último desafío! Tú puedes',
@@ -308,10 +302,10 @@ export function getTotalLevels() {
 
 export function getBlocks() {
   return [
-    { id: 1, name: 'La Clínica de Paula', biome: 'clinica', emoji: '🏠', color: '#FF6B6B', bgColor: '#FFF5F5' },
-    { id: 2, name: 'La Granja', biome: 'granja', emoji: '🌾', color: '#F7DC6F', bgColor: '#FFFBF0' },
-    { id: 3, name: 'El Bosque Mágico', biome: 'bosque', emoji: '🌲', color: '#58D68D', bgColor: '#F0FFF4' },
-    { id: 4, name: 'La Selva', biome: 'selva', emoji: '🌴', color: '#1ABC9C', bgColor: '#F0FDFA' },
+    { id: 1, name: 'La Clínica de Paula', biome: 'clinica', color: '#FF6B6B', bgColor: '#FFF5F5' },
+    { id: 2, name: 'La Granja', biome: 'granja', color: '#F7DC6F', bgColor: '#FFFBF0' },
+    { id: 3, name: 'El Bosque Mágico', biome: 'bosque', color: '#58D68D', bgColor: '#F0FFF4' },
+    { id: 4, name: 'La Selva', biome: 'selva', color: '#1ABC9C', bgColor: '#F0FDFA' },
   ];
 }
 

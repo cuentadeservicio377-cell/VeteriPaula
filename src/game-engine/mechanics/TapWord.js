@@ -72,7 +72,7 @@ export class TapWordMechanic {
     if (!this.completed) {
       ctx.fillStyle = '#A1887F';
       ctx.font = "18px 'Nunito', sans-serif";
-      ctx.fillText(`💡 ${this.levelData.tip}`, this.w / 2, this.h * 0.48);
+      ctx.fillText(`Tip: ${this.levelData.tip}`, this.w / 2, this.h * 0.48);
     }
 
     // Buttons

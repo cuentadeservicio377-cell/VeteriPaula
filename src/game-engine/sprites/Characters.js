@@ -897,4 +897,27 @@ export function createAnimal(type, x, y, scale = 5) {
   return sprite;
 }
 
+// Export raw pixel defs for React data URL generation
+export const ANIMAL_PIXEL_DEFS = {
+  perro:     DOG_HURT,
+  gato:      CAT_HURT,
+  conejo:    RABBIT_HURT,
+  pajaro:    BIRD_HURT,
+  tortuga:   TURTLE_HURT,
+  vaca:      COW_HURT,
+  gallina:   CHICKEN_HURT,
+  caballo:   HORSE_HURT,
+  oveja:     SHEEP_HURT,
+  pato:      DUCK_HURT,
+  zorro:     FOX_HURT,
+  ardilla:   SQUIRREL_HURT,
+  erizo:     HEDGEHOG_HURT,
+  buho:      OWL_HURT,
+  ciervo:    DEER_HURT,
+  mono:      MONKEY_HURT,
+  tucan:     TOUCAN_HURT,
+  jaguar:    JAGUAR_HURT,
+  delfin:    DOLPHIN_HURT,
+};
+
 // createPaula exported above

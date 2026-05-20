@@ -1,15 +1,22 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { vocabulary } from '../../data/vocabulary.js';
 import { shuffle } from '../../utils/shuffle.js';
 import { useTTS } from '../../hooks/useTTS.js';
+import { getAnimalSpriteUrl } from '../../hooks/usePixelArt.js';
+import { spriteToDataURL } from '../../utils/spriteToImage.js';
+import { ITEM_DEFS } from '../../game-engine/sprites/Items.js';
+import { ICON_SPRITES } from '../../game-engine/sprites/UI.js';
 
 const MINIGAME_TYPES = ['flashcard', 'word_reveal', 'matching'];
 
+const PIXEL_STYLE = { imageRendering: 'pixelated', display: 'block' };
+
 /**
  * Loading screen with interactive vocabulary minigames
+ * All visuals use pixel art sprites instead of emojis
  */
 export default function LoadingScreen({ nextBiome, onReady }) {
-  const [minigameType] = useState(() => 
+  const [minigameType] = useState(() =>
     MINIGAME_TYPES[Math.floor(Math.random() * MINIGAME_TYPES.length)]
   );
   const [words, setWords] = useState([]);
@@ -19,14 +26,64 @@ export default function LoadingScreen({ nextBiome, onReady }) {
   const [progress, setProgress] = useState(0);
   const { speak } = useTTS();
 
-  // Get vocabulary words for the next biome
+  // Pre-generate sprite URLs
+  const spriteUrls = useMemo(() => {
+    const urls = {};
+    // Animal sprites
+    const animals = ['perro', 'gato', 'conejo', 'pajaro', 'tortuga', 'vaca', 'gallina', 'caballo', 'oveja', 'pato', 'zorro', 'ardilla', 'erizo', 'buho', 'ciervo', 'mono', 'tucan', 'jaguar', 'delfin'];
+    animals.forEach(a => {
+      urls[a] = getAnimalSpriteUrl(a, 4);
+    });
+    // Item sprites
+    Object.keys(ITEM_DEFS).forEach(key => {
+      urls[key] = spriteToDataURL(ITEM_DEFS[key], 4);
+    });
+    // Icon sprites
+    urls.book = spriteToDataURL(ICON_SPRITES.book, 4);
+    urls.eye = spriteToDataURL(ICON_SPRITES.eye, 4);
+    urls.arrowLeft = spriteToDataURL(ICON_SPRITES.arrowLeft, 4);
+    urls.arrowRight = spriteToDataURL(ICON_SPRITES.arrowRight, 4);
+    urls.check = spriteToDataURL(ICON_SPRITES.check, 4);
+    urls.star = spriteToDataURL(ICON_SPRITES.star, 4);
+    return urls;
+  }, []);
+
+  // Get sprite for a word
+  const getWordSprite = (word) => {
+    const key = word.toLowerCase();
+    if (spriteUrls[key]) return spriteUrls[key];
+    // Try common mappings
+    const mappings = {
+      platano: 'sol', mango: 'sol', coco: 'sol', fruta: 'sol',
+      comida: 'sol', alimento: 'sol', medicina: 'medicina',
+      agua: 'agua', venda: 'venda', herida: 'venda',
+      cepillo: 'cepillo', bosque: 'sol', selva: 'sol',
+      granja: 'sol', casa: 'home', calle: 'home',
+      jardin: 'sol', arbol: 'sol', flor: 'star',
+      hoja: 'sol', seta: 'sol', rio: 'agua',
+      arena: 'sol', liana: 'sol', cueva: 'sol',
+      leche: 'agua', huevo: 'star', lana: 'toalla',
+      cascos: 'pinzas', plumas: 'toalla', nido: 'home',
+      madriguera: 'home', nuez: 'sol', pata: 'venda',
+      cola: 'toalla', oreja: 'sol', ojo: 'eye',
+      nariz: 'sol', hamster: 'conejo', pez: 'delfin',
+      loro: 'tucan', raton: 'conejo', cerdo: 'vaca',
+      burro: 'caballo', toro: 'vaca', gallo: 'gallina',
+      pavo: 'gallina', oso: 'zorro', lobo: 'zorro',
+      iguana: 'tortuga', tigre: 'jaguar', serpiente: 'tortuga',
+      mariposa: 'pajaro',
+    };
+    const mapped = mappings[key];
+    if (mapped && spriteUrls[mapped]) return spriteUrls[mapped];
+    return spriteUrls.book; // fallback
+  };
+
   useEffect(() => {
     const biomeWords = vocabulary[nextBiome]?.words || vocabulary.home.words;
     const selected = shuffle(biomeWords).slice(0, 5);
     setWords(selected);
   }, [nextBiome]);
 
-  // Simulate loading progress
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(p => {
@@ -60,32 +117,7 @@ export default function LoadingScreen({ nextBiome, onReady }) {
   };
 
   const currentWord = words[currentIndex];
-
-  // Get emoji for a word (simple mapping)
-  const getWordEmoji = (word) => {
-    const emojiMap = {
-      perro: '🐕', gato: '🐈', conejo: '🐇', hamster: '🐹', pajaro: '🐦',
-      tortuga: '🐢', pez: '🐟', loro: '🦜', raton: '🐁',
-      vaca: '🐄', gallina: '🐔', caballo: '🐴', cerdo: '🐷',
-      oveja: '🐑', pato: '🦆', burro: '🫏', toro: '🐂',
-      gallo: '🐓', pavo: '🦃',
-      zorro: '🦊', ardilla: '🐿️', erizo: '🦔', buho: '🦉',
-      ciervo: '🦌', oso: '🐻', lobo: '🐺',
-      mono: '🐵', tucan: '🐦', jaguar: '🐆', delfin: '🐬',
-      iguana: '🦎', tigre: '🐯', serpiente: '🐍', mariposa: '🦋',
-      casa: '🏠', calle: '🛣️', jardin: '🌻', pata: '🦶',
-      cola: '🦚', oreja: '👂', ojo: '👁️', nariz: '👃',
-      herida: '🩹', venda: '🤕', medicina: '💊', agua: '💧',
-      comida: '🍎', granja: '🚜', establo: '🏚️', corral: '🌾',
-      leche: '🥛', huevo: '🥚', lana: '🧶', cascos: '🥾',
-      plumas: '🪶', alimento: '🌽', cepillo: '🪥', bosque: '🌲',
-      arbol: '🌳', madriguera: '🕳️', nido: '🪹', fruta: '🍓',
-      nuez: '🌰', rio: '🏞️', hoja: '🍃', flor: '🌸',
-      seta: '🍄', selva: '🌴', platano: '🍌', mango: '🥭',
-      coco: '🥥', liana: '🌿', cueva: '🪨', arena: '🏖️'
-    };
-    return emojiMap[word] || '📖';
-  };
+  const currentSprite = currentWord ? getWordSprite(currentWord) : null;
 
   return (
     <div className="screen-container" style={{
@@ -96,7 +128,7 @@ export default function LoadingScreen({ nextBiome, onReady }) {
         color: '#5D4037',
         marginBottom: '10px'
       }}>
-        📚 Aprendiendo palabras
+        Aprendiendo palabras
       </h2>
 
       <p style={{
@@ -155,14 +187,23 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                   speakWord(currentWord);
                 }}
                 style={{
-                  fontSize: 'clamp(4rem, 12vw, 6rem)',
                   cursor: 'pointer',
                   marginBottom: '20px',
                   transition: 'transform 0.3s ease',
-                  transform: revealed ? 'rotateY(180deg)' : 'none'
+                  transform: revealed ? 'rotateY(180deg)' : 'none',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '80px',
                 }}
               >
-                {revealed ? getWordEmoji(currentWord) : '📖'}
+                {revealed && currentSprite ? (
+                  <img src={currentSprite} alt={currentWord} style={{ ...PIXEL_STYLE, width: '64px', height: '56px' }} />
+                ) : (
+                  spriteUrls.book && (
+                    <img src={spriteUrls.book} alt="Libro" style={{ ...PIXEL_STYLE, width: '48px', height: '48px' }} />
+                  )
+                )}
               </div>
 
               {revealed && (
@@ -183,11 +224,16 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                       borderRadius: '50%',
                       width: '50px',
                       height: '50px',
-                      fontSize: '1.5rem',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto',
                     }}
                   >
-                    🔊
+                    {spriteUrls.star && (
+                      <img src={spriteUrls.star} alt="Escuchar" style={{ ...PIXEL_STYLE, width: '28px', height: '28px' }} />
+                    )}
                   </button>
                 </div>
               )}
@@ -204,10 +250,13 @@ export default function LoadingScreen({ nextBiome, onReady }) {
           {minigameType === 'word_reveal' && (
             <>
               <div style={{
-                fontSize: 'clamp(3rem, 10vw, 5rem)',
-                marginBottom: '15px'
+                marginBottom: '15px',
+                display: 'flex',
+                justifyContent: 'center',
               }}>
-                {getWordEmoji(currentWord)}
+                {currentSprite && (
+                  <img src={currentSprite} alt={currentWord} style={{ ...PIXEL_STYLE, width: '64px', height: '56px' }} />
+                )}
               </div>
 
               <div style={{
@@ -230,10 +279,20 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                 style={{
                   background: revealed ? '#B5EAD7' : '#FFDac1',
                   color: '#5D4037',
-                  fontSize: '1.2rem'
+                  fontSize: '1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center',
                 }}
               >
-                {revealed ? '✅ ¡Aprendida!' : '👁️ Revelar'}
+                {revealed && spriteUrls.check && (
+                  <img src={spriteUrls.check} alt="" style={{ ...PIXEL_STYLE, width: '20px', height: '20px' }} />
+                )}
+                {!revealed && spriteUrls.eye && (
+                  <img src={spriteUrls.eye} alt="" style={{ ...PIXEL_STYLE, width: '20px', height: '20px' }} />
+                )}
+                {revealed ? '¡Aprendida!' : 'Revelar'}
               </button>
             </>
           )}
@@ -242,10 +301,13 @@ export default function LoadingScreen({ nextBiome, onReady }) {
           {minigameType === 'matching' && (
             <>
               <div style={{
-                fontSize: 'clamp(2.5rem, 8vw, 4rem)',
-                marginBottom: '15px'
+                marginBottom: '15px',
+                display: 'flex',
+                justifyContent: 'center',
               }}>
-                {getWordEmoji(currentWord)}
+                {currentSprite && (
+                  <img src={currentSprite} alt={currentWord} style={{ ...PIXEL_STYLE, width: '64px', height: '56px' }} />
+                )}
               </div>
 
               <div style={{
@@ -268,8 +330,8 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                       }
                     }}
                     style={{
-                      background: revealed && word === currentWord 
-                        ? '#B5EAD7' 
+                      background: revealed && word === currentWord
+                        ? '#B5EAD7'
                         : revealed && word !== currentWord
                           ? '#E0E0E0'
                           : '#FFDac1',
@@ -303,10 +365,16 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                 padding: '10px 20px',
                 fontSize: '1rem',
                 cursor: currentIndex === 0 ? 'default' : 'pointer',
-                opacity: currentIndex === 0 ? 0.5 : 1
+                opacity: currentIndex === 0 ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
-              ⬅️ Anterior
+              {spriteUrls.arrowLeft && (
+                <img src={spriteUrls.arrowLeft} alt="" style={{ ...PIXEL_STYLE, width: '16px', height: '16px' }} />
+              )}
+              Anterior
             </button>
             <button
               onClick={handleNextWord}
@@ -318,10 +386,16 @@ export default function LoadingScreen({ nextBiome, onReady }) {
                 padding: '10px 20px',
                 fontSize: '1rem',
                 cursor: currentIndex === words.length - 1 ? 'default' : 'pointer',
-                opacity: currentIndex === words.length - 1 ? 0.5 : 1
+                opacity: currentIndex === words.length - 1 ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
-              Siguiente ➡️
+              Siguiente
+              {spriteUrls.arrowRight && (
+                <img src={spriteUrls.arrowRight} alt="" style={{ ...PIXEL_STYLE, width: '16px', height: '16px' }} />
+              )}
             </button>
           </div>
         </div>
@@ -340,7 +414,7 @@ export default function LoadingScreen({ nextBiome, onReady }) {
           textDecoration: 'underline'
         }}
       >
-        Saltar vocabulario →
+        Saltar vocabulario
       </button>
     </div>
   );
