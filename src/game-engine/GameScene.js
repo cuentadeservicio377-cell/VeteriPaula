@@ -9,7 +9,7 @@ import { tween, float } from '../utils/tween.js';
 import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
 import { createItemSprite } from './sprites/Items.js';
 import { speak, stopTTS, speakEncouragement, wakeUpSpeechSynthesis } from '../utils/tts.js';
-import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic } from '../utils/sfx.js';
+import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic, playDogBark } from '../utils/sfx.js';
 
 /**
  * v2.3 Game Scene — Tutorial hand, Paula pointing, background music, star system
@@ -67,7 +67,7 @@ export class GameScene {
       ease: 'easeOutBack',
       onUpdate: (v) => { this.paula.x = v.x; },
       onComplete: () => {
-        this.paula.setState('worried');
+        this.paula.setState('idle');
         this.state = 'playing';
         this.createMechanic();
       },
@@ -137,11 +137,11 @@ export class GameScene {
     // Start background music
     startBackgroundMusic();
 
-    // Read instruction aloud after Paula settles
-    const t = setTimeout(() => {
-      speak(this.levelData.instruction, { rate: 0.75 });
-    }, 400);
-    this.timers.push(t);
+    // Paula greets and reads instruction aloud
+    const t1 = setTimeout(() => {
+      speak('¡Hola! Soy Paula. ' + this.levelData.instruction, { rate: 0.75 });
+    }, 600);
+    this.timers.push(t1);
   }
 
   // Tutorial system
@@ -155,7 +155,7 @@ export class GameScene {
 
     const needsTutorial = tutorialLevels[mechanicType]?.includes(this.levelData.id);
     if (needsTutorial && !this.hasSeenTutorial(mechanicType)) {
-      this.markTutorialSeen(mechanicType);
+      // Don't mark as seen yet — persist until correct answer or timeout
       const w = this.canvas.width;
       const h = this.canvas.height;
 
@@ -214,8 +214,11 @@ export class GameScene {
     this.paula.setState('celebrate');
     this.animal.heal();
 
-    // Stop tutorial if active
-    this.tutorialHand = null;
+    // Stop tutorial if active — mark as seen now that they succeeded
+    if (this.tutorialHand) {
+      this.markTutorialSeen(this.levelData.mechanic);
+      this.tutorialHand = null;
+    }
     this.pointingTarget = null;
 
     // Stop background music gently
@@ -230,6 +233,9 @@ export class GameScene {
     this.particles.spawnConfetti(cx, cy, 40);
     this.particles.spawnHearts(cx, cy - 30, 10);
     this.particles.spawnStars(cx, cy - 50, 15);
+
+    // Animal happy bark
+    setTimeout(() => playDogBark(), 400);
 
     // Paula jumps
     tween({
@@ -291,12 +297,14 @@ export class GameScene {
       speak('Paula te va a ayudar a encontrarla...', { rate: 0.75, pitch: 1.1 });
     }
 
-    // Paula reacts
+    // Paula reacts briefly, then back to idle
     this.paula.setState('worried');
     const t = setTimeout(() => {
       if (this.state === 'playing') this.paula.setState('idle');
     }, 700);
     this.timers.push(t);
+
+    // Animal reaction (sound + animation) is handled by the mechanic
   }
 
   activateHint(level) {
@@ -537,11 +545,8 @@ export class GameScene {
     // Reset inactivity
     this.inactivityTimer = 0;
 
-    // Hide tutorial on first touch
-    if (this.tutorialHand) {
-      this.tutorialHand.done = true;
-      this.tutorialHand = null;
-    }
+    // Tutorial persists until correct answer (handled by mechanic) or long inactivity
+    // Don't dismiss on random touches anymore
 
     if (this.state === 'playing' && this.mechanic) {
       return this.mechanic.handleTouch(x, y);

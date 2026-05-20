@@ -1,125 +1,202 @@
+import { Entity } from './Entity.js';
+import { tween } from '../../utils/tween.js';
 import { createAnimal } from '../sprites/Characters.js';
 
 /**
- * Animal — Avatar World style pixel art sprite
- * States: hurt → healing → happy
- * Maintains same interface as v2.0 geometric version
+ * Animal entity with reactions and emotions
+ * v2.4 — Added reactWrong() with head shake and thought bubble
  */
-export class Animal {
-  constructor(x, y, type, options = {}) {
-    this.type = type;
-    this.sprite = createAnimal(type, x, y, options.scale || 5);
-    this._x = x;
-    this._y = y;
+export class Animal extends Entity {
+  constructor(x, y, typeOrSprite, options = {}) {
+    super(x, y, 80, 80);
 
-    this.state = options.state || 'hurt';
-    this.injury = options.injury || 'pata';
+    // Support both: new Animal(x, y, 'dog', {scale:6}) and new Animal(x, y, spriteObj)
+    if (typeof typeOrSprite === 'string') {
+      this.type = typeOrSprite;
+      this.sprite = createAnimal(typeOrSprite, x, y, options.scale || 5);
+    } else {
+      this.type = options.type || 'unknown';
+      this.sprite = typeOrSprite;
+    }
+
+    this.state = options.state || 'idle'; // idle | hurt | healing | happy | confused
+    this.hearts = [];
     this.healingTimer = 0;
-
-    // Keep colors for any legacy rendering that needs it
-    this.colors = this.getColors(type);
+    this.thinkTimer = 0;
+    this.confusedTimer = 0;
+    this.reactionText = null; // For thought bubble text
+    this.reactionScale = 0;
+    this.headShake = 0;
+    this.headShakeTimer = 0;
   }
 
-  get x() { return this._x; }
-  set x(v) { this._x = v; this.sprite.x = v; }
-  get y() { return this._y; }
-  set y(v) { this._y = v; this.sprite.y = v; }
-
-  get width() {
-    const frame = this.sprite.frames[this.sprite.currentState];
-    return frame ? frame.width * frame.scale : 90; // 18 cols × 5
+  setState(state) {
+    this.state = state;
+    if (this.sprite) this.sprite.setState(state);
   }
 
-  get height() {
-    const frame = this.sprite.frames[this.sprite.currentState];
-    return frame ? frame.height * frame.scale : 80; // 16 rows × 5
+  update(dt) {
+    if (this.sprite) this.sprite.update(dt);
+
+    // Head shake animation
+    if (this.headShakeTimer > 0) {
+      this.headShakeTimer -= dt;
+      this.headShake = Math.sin(this.headShakeTimer * 30) * 8;
+      if (this.headShakeTimer <= 0) {
+        this.headShake = 0;
+      }
+    }
+
+    // Healing progression
+    if (this.state === 'healing') {
+      this.healingTimer += dt;
+      if (this.healingTimer > 1.5) {
+        this.state = 'happy';
+        if (this.sprite) this.sprite.setState('happy');
+      }
+    }
+
+    // Thought bubble timer
+    if (this.thinkTimer > 0) {
+      this.thinkTimer -= dt;
+      if (this.thinkTimer <= 0) {
+        this.reactionText = null;
+        this.reactionScale = 0;
+      }
+    }
+
+    // Confused timer
+    if (this.confusedTimer > 0) {
+      this.confusedTimer -= dt;
+      if (this.confusedTimer <= 0 && this.state === 'confused') {
+        this.state = 'hurt';
+        if (this.sprite) this.sprite.setState('hurt');
+      }
+    }
+  }
+
+  draw(ctx) {
+    if (!this.sprite) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    // Apply head shake rotation
+    if (this.headShake !== 0) {
+      ctx.translate(0, -20); // Pivot around neck/head area
+      ctx.rotate((this.headShake * Math.PI) / 180);
+      ctx.translate(0, 20);
+    }
+    this.sprite.render(ctx);
+    ctx.restore();
+
+    // Thought bubble
+    if (this.reactionText) {
+      this.drawReactionBubble(ctx);
+    }
+  }
+
+  drawReactionBubble(ctx) {
+    const bx = this.x + this.width / 2 + 30;
+    const by = this.y - this.height / 2 - 20;
+    const s = Math.min(this.reactionScale, 1);
+
+    if (s <= 0.01) return;
+
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.scale(s, s);
+
+    // Bubble body
+    const bw = 80;
+    const bh = 40;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#5D4037';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    // Tail
+    ctx.beginPath();
+    ctx.moveTo(-bw / 2 + 15, bh / 2);
+    ctx.lineTo(-bw / 2 + 10, bh / 2 + 12);
+    ctx.lineTo(-bw / 2 + 25, bh / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Emoji / Text
+    ctx.font = '24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#5D4037';
+    ctx.fillText(this.reactionText, 0, 0);
+
+    ctx.restore();
+  }
+
+  heal() {
+    this.state = 'healing';
+    if (this.sprite) this.sprite.setState('healing');
+    this.healingTimer = 0;
   }
 
   centerX() {
     return this.x + this.width / 2;
   }
 
-  update(dt) {
-    this.sprite.update(dt);
+  /**
+   * React to wrong answer — head shake + confused state + thought bubble
+   */
+  reactWrong(text = '🤔') {
+    this.state = 'confused';
+    if (this.sprite) this.sprite.setState('confused');
+    this.confusedTimer = 1.2;
+    this.headShakeTimer = 0.6;
+    this.reactionText = text;
 
-    if (this.state === 'healing') {
-      this.healingTimer += dt;
-      if (this.healingTimer > 1.5) {
-        this.state = 'happy';
-        this.sprite.setState('happy');
-      }
+    // Pop-in animation for thought bubble
+    tween({
+      from: { s: 0 },
+      to: { s: 1 },
+      duration: 200,
+      ease: 'easeOutBack',
+      onUpdate: (v) => { this.reactionScale = v.s; },
+    });
+
+    this.thinkTimer = 2.0;
+  }
+
+  /**
+   * React to correct item application
+   */
+  reactCorrect(text = '😊') {
+    this.reactionText = text;
+    this.thinkTimer = 2.0;
+    tween({
+      from: { s: 0 },
+      to: { s: 1 },
+      duration: 200,
+      ease: 'easeOutBack',
+      onUpdate: (v) => { this.reactionScale = v.s; },
+    });
+  }
+
+  /**
+   * Spawn sparkle burst (called by GameScene)
+   */
+  spawnHearts() {
+    for (let i = 0; i < 5; i++) {
+      this.hearts.push({
+        x: this.x + this.width / 2 + (Math.random() - 0.5) * 60,
+        y: this.y - this.height / 2,
+        vx: (Math.random() - 0.5) * 60,
+        vy: -30 - Math.random() * 40,
+        life: 1.0,
+        size: 8 + Math.random() * 8,
+      });
     }
-  }
-
-  render(ctx) {
-    this.sprite.render(ctx);
-
-    // Hearts when happy (rendered as simple pixel hearts above the sprite)
-    if (this.state === 'happy') {
-      this.renderHearts(ctx);
-    }
-  }
-
-  renderHearts(ctx) {
-    const time = Date.now() / 1000;
-    const cx = this.centerX();
-    const baseY = this.y - 10;
-
-    ctx.save();
-    for (let i = 0; i < 3; i++) {
-      const offset = i * 2.1;
-      const hx = cx + Math.sin(time * 3 + offset) * 20;
-      const hy = baseY + Math.cos(time * 2 + offset) * 8 - (i * 5);
-      const alpha = 0.5 + Math.sin(time * 4 + offset) * 0.3;
-
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#FF6B6B';
-      // Tiny pixel heart
-      const s = 4;
-      ctx.fillRect(hx - s, hy - s * 2, s * 2, s);
-      ctx.fillRect(hx - s * 2, hy - s, s, s);
-      ctx.fillRect(hx + s, hy - s, s, s);
-      ctx.fillRect(hx - s * 2, hy, s * 4, s);
-      ctx.fillRect(hx - s, hy + s, s * 2, s);
-      ctx.fillRect(hx, hy + s * 2, s, s);
-    }
-    ctx.restore();
-  }
-
-  heal() {
-    this.state = 'healing';
-    this.sprite.setState('healing');
-    this.healingTimer = 0;
-  }
-
-  setState(s) {
-    this.state = s;
-    this.sprite.setState(s);
-  }
-
-  // Legacy color palette for any UI that references it
-  getColors(type) {
-    const palettes = {
-      perro: { body: '#D4A574', spot: '#8B6914', ear: '#C4956A' },
-      gato: { body: '#FFA500', spot: '#FF8C00', ear: '#FFB347' },
-      conejo: { body: '#F5F5DC', spot: '#E8E8C8', ear: '#FFB6C1' },
-      pajaro: { body: '#87CEEB', spot: '#4682B4', ear: '#B0E0E6' },
-      tortuga: { body: '#228B22', spot: '#006400', ear: '#32CD32' },
-      vaca: { body: '#FFFFFF', spot: '#000000', ear: '#FFB6C1' },
-      gallina: { body: '#FFFFFF', spot: '#FF0000', ear: '#FF6347' },
-      caballo: { body: '#8B4513', spot: '#654321', ear: '#A0522D' },
-      oveja: { body: '#FFFFF0', spot: '#F5F5DC', ear: '#FFB6C1' },
-      pato: { body: '#FFFF00', spot: '#FFA500', ear: '#FF6347' },
-      zorro: { body: '#FF8C00', spot: '#FF4500', ear: '#FFB6C1' },
-      ardilla: { body: '#D2691E', spot: '#8B4513', ear: '#FFB6C1' },
-      erizo: { body: '#808080', spot: '#696969', ear: '#FFB6C1' },
-      buho: { body: '#8B4513', spot: '#654321', ear: '#D2B48C' },
-      ciervo: { body: '#D2691E', spot: '#8B4513', ear: '#FFB6C1' },
-      mono: { body: '#D2691E', spot: '#8B4513', ear: '#FFB6C1' },
-      tucan: { body: '#000000', spot: '#FF4500', ear: '#FFD700' },
-      jaguar: { body: '#FF8C00', spot: '#000000', ear: '#FFB6C1' },
-      delfin: { body: '#4682B4', spot: '#1E90FF', ear: '#87CEEB' },
-    };
-    return palettes[type] || { body: '#ccc', spot: '#999', ear: '#ddd' };
   }
 }

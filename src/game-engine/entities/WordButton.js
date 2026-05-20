@@ -1,22 +1,24 @@
 import { Entity } from './Entity.js';
 
 /**
- * Interactive button with a word for reading mechanics
+ * Interactive button with a word + optional icon for reading mechanics
+ * v2.3 — Added iconSprite support for pre-readers
  */
 export class WordButton extends Entity {
   constructor(x, y, word, isCorrect = false, options = {}) {
     const width = options.width || 180;
     const height = options.height || 80;
     super(x, y, width, height);
-    
+
     this.word = word;
     this.isCorrect = isCorrect;
     this.hovered = false;
     this.pressed = false;
-    this.confirmed = false; // true when selected/correct
-    this.wrong = false; // true when selected/incorrect
+    this.confirmed = false;
+    this.wrong = false;
+    this.visible = true;
     this.glowRadius = 0;
-    
+
     this.bgColor = options.bgColor || '#FFDac1';
     this.hoverColor = options.hoverColor || '#FFB7B2';
     this.correctColor = options.correctColor || '#B5EAD7';
@@ -24,16 +26,21 @@ export class WordButton extends Entity {
     this.textColor = options.textColor || '#5D4037';
     this.fontSize = options.fontSize || 32;
     this.borderRadius = options.borderRadius || 16;
+
+    // Icon sprite (PixelSprite instance) for pre-readers
+    this.iconSprite = options.iconSprite || null;
+    this.iconScale = options.iconScale || 1;
   }
 
   update(dt) {
-    // Subtle idle animation
     if (!this.confirmed && !this.wrong) {
       this.scale = 1 + Math.sin(Date.now() * 0.003) * 0.02;
     }
   }
 
   draw(ctx) {
+    if (!this.visible) return;
+
     let color = this.bgColor;
     if (this.confirmed) color = this.correctColor;
     else if (this.wrong) color = this.wrongColor;
@@ -66,12 +73,41 @@ export class WordButton extends Entity {
     this.roundRect(ctx, 0, 0, this.width, this.height, this.borderRadius);
     ctx.stroke();
 
+    // Calculate icon metrics (relative coords within button)
+    const hasIcon = this.iconSprite && this.iconSprite.render;
+    let iconW = 0;
+    let iconH = 0;
+    if (hasIcon) {
+      iconW = this.iconSprite.width * this.iconSprite.scale;
+      iconH = this.iconSprite.height * this.iconSprite.scale;
+    }
+    const iconGap = hasIcon ? 12 : 0;
+
+    // Total content width
+    const textW = this.word.length * (this.fontSize * 0.55); // rough estimate
+    const totalContentW = iconW + iconGap + textW;
+    const startX = (this.width - totalContentW) / 2;
+
+    // Icon
+    if (hasIcon) {
+      ctx.save();
+      const iconX = startX + iconW / 2;
+      const iconY = this.height / 2;
+      // PixelSprite renders at its own x,y; we set it to 0,0 and use translate
+      ctx.translate(iconX, iconY);
+      this.iconSprite.x = 0;
+      this.iconSprite.y = 0;
+      this.iconSprite.render(ctx);
+      ctx.restore();
+    }
+
     // Text
     ctx.fillStyle = this.textColor;
     ctx.font = `bold ${this.fontSize}px 'Nunito', sans-serif`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this.word, this.width / 2, this.height / 2);
+    const textX = startX + iconW + iconGap;
+    ctx.fillText(this.word, textX, this.height / 2);
   }
 
   roundRect(ctx, x, y, w, h, r) {

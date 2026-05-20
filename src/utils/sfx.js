@@ -102,6 +102,42 @@ export function playBoing() {
   playRamp({ type: 'sine', fromFreq: 300, toFreq: 150, duration: 0.25, gain: 0.10, when: t });
 }
 
+/** Dog whine — soft whimper when hurt/ignored */
+export function playDogWhine() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  // Two descending ramps with vibrato-like effect
+  playRamp({ type: 'triangle', fromFreq: 420, toFreq: 280, duration: 0.35, gain: 0.08, when: t });
+  playRamp({ type: 'sine', fromFreq: 380, toFreq: 260, duration: 0.40, gain: 0.05, when: t + 0.05 });
+}
+
+/** Dog happy bark — short cheerful bark */
+export function playDogBark() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  playTone({ type: 'square', freq: 650, duration: 0.08, gain: 0.10, when: t });
+  playTone({ type: 'square', freq: 580, duration: 0.10, gain: 0.08, when: t + 0.12 });
+}
+
+/** Dog head shake — quick "nope" sound */
+export function playDogNope() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  playTone({ type: 'triangle', freq: 350, duration: 0.06, gain: 0.08, when: t });
+  playTone({ type: 'triangle', freq: 320, duration: 0.06, gain: 0.08, when: t + 0.08 });
+}
+
+/** Characterful "hmm" for confusion */
+export function playHmm() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  playRamp({ type: 'sine', fromFreq: 280, toFreq: 220, duration: 0.30, gain: 0.08, when: t });
+}
+
 /** Whoosh — noise sweep for drag start */
 export function playWhoosh() {
   const ctx = getCtx();
