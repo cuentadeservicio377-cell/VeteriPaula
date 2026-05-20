@@ -92,12 +92,7 @@ export class TapWordMechanic {
     ctx.textAlign = 'center';
     ctx.fillText(this.levelData.instruction, this.w / 2, this.h * 0.38);
 
-    // Tip text (hide when completed)
-    if (!this.completed) {
-      ctx.fillStyle = '#A1887F';
-      ctx.font = "18px 'Nunito', sans-serif";
-      ctx.fillText(`Tip: ${this.levelData.tip}`, this.w / 2, this.h * 0.48);
-    }
+    // Tip text removed — literal tip eliminates cognitive challenge for children
 
     // Render buttons
     this.buttons.forEach(btn => btn.render(ctx));

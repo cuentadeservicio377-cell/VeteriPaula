@@ -7,16 +7,15 @@ export const levels = [
   // ========== BLOQUE 1: LA CLÍNICA DE PAULA (Niveles 1-5) ==========
   {
     id: 1, biome: 'clinica', block: 1,
-    title: 'El perrito lastimado',
+    title: 'Pipo el perrito lastimado',
     animal: 'perro', injury: 'pata',
     mechanic: 'tap_word',
-    instruction: 'El perrito tiene la pata lastimada. Toca la palabra que necesita:',
+    instruction: 'Pipo se lastimó la pata. ¿Qué necesita?',
     options: ['VENDA', 'HUESO'],
     correct: 'VENDA',
     treatment: 'una venda en la pata',
     newSounds: ['/a/', '/e/'],
-    tip: 'V de VENDA',
-    celebration: '¡El perrito puede caminar otra vez!',
+    celebration: '¡Pipo puede caminar otra vez!',
   },
   {
     id: 2, biome: 'clinica', block: 1,

@@ -157,6 +157,17 @@ const HOME_PIXELS = [
   'TR1C2C2C2C2C2R1T',
 ];
 
+// Bone / hueso 🦴
+const BONE_PIXELS = [
+  ' TTA5TTTA5TT',
+  ' TTA5A1A5TT',
+  'TTA5A1A1A5TT',
+  'TTA5A1A1A5TT',
+  'TTA5A1A1A5TT',
+  ' TTA5A1A5TT',
+  ' TTA5TTTA5TT',
+];
+
 // Star ⭐ (for level completion)
 const STAR_PIXELS = [
   'TTTTY1TTTT',
@@ -180,6 +191,7 @@ export const ITEM_DEFS = {
   cepillo: BRUSH_PIXELS,
   sol: SUN_PIXELS,
   abrazo: HUG_PIXELS,
+  hueso: BONE_PIXELS,
   lava: WATER_PIXELS,
   seca: SPONGE_PIXELS,
   esponja: SPONGE_PIXELS,
@@ -210,6 +222,7 @@ export const STEP_TO_SPRITE = {
   'ABRIGO': 'abrigo',
   'CALOR': 'calor',
   'MEDICINA': 'medicina',
+  'HUESO': 'hueso',
   'REPOSO': 'reposo',
   'CEPILLO': 'cepillo',
   'SOL': 'sol',

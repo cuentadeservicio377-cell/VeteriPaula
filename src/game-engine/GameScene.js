@@ -1,4 +1,5 @@
 import { Animal } from './entities/Animal.js';
+import { Pipo } from './entities/Pipo.js';
 import { Paula } from './entities/Paula.js';
 import { TapWordMechanic } from './mechanics/TapWord.js';
 import { DragSyllablesMechanic } from './mechanics/DragSyllables.js';
@@ -9,7 +10,7 @@ import { tween, float } from '../utils/tween.js';
 import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
 import { createItemSprite } from './sprites/Items.js';
 import { speak, stopTTS, speakEncouragement, wakeUpSpeechSynthesis } from '../utils/tts.js';
-import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic, playDogBark } from '../utils/sfx.js';
+import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic, playDogBark, playDogWhine } from '../utils/sfx.js';
 
 /**
  * v2.3 Game Scene — Tutorial hand, Paula pointing, background music, star system
@@ -55,9 +56,15 @@ export class GameScene {
     this.paula = new Paula(-120, h * 0.35, { state: 'walk', scale: 6 });
 
     // Animal waits on the right, hurt
-    this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
-      state: 'hurt', injury: this.levelData.injury, scale: 6
-    });
+    // Level 1 special: Pipo the dog with interactive touch zones
+    if (this.levelData.id === 1) {
+      this.animal = new Pipo(w * 0.58, h * 0.42, 6);
+      this.animal.state = 'lying_down';
+    } else {
+      this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
+        state: 'hurt', injury: this.levelData.injury, scale: 6
+      });
+    }
 
     // Animate Paula walking in
     tween({
@@ -68,8 +75,14 @@ export class GameScene {
       onUpdate: (v) => { this.paula.x = v.x; },
       onComplete: () => {
         this.paula.setState('idle');
-        this.state = 'playing';
-        this.createMechanic();
+        if (this.levelData.id === 1) {
+          // Level 1: exploration phase before buttons appear
+          this.state = 'explore';
+          this.startLevel1Flow();
+        } else {
+          this.state = 'playing';
+          this.createMechanic();
+        }
       },
     });
 
@@ -105,6 +118,36 @@ export class GameScene {
     }
   }
 
+  // Level 1 special flow: exploration → choice → celebration
+  startLevel1Flow() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Step 1: Paula presents Pipo (TTS + Pipo whines)
+    const t1 = setTimeout(() => {
+      speak('¡Hola! Soy Paula. Este es Pipo, se lastimó la pata.', { rate: 0.75 });
+    }, 400);
+    this.timers.push(t1);
+
+    const t2 = setTimeout(() => {
+      if (this.animal && this.animal.setState) {
+        this.animal.setState('head_up');
+      }
+      playDogWhine();
+    }, 1800);
+    this.timers.push(t2);
+
+    // Step 2: After exploration period, show the question and buttons
+    const t3 = setTimeout(() => {
+      this.state = 'playing';
+      this.createMechanic();
+      // Paula asks the question
+      speak(this.levelData.instruction, { rate: 0.75 });
+    }, 6500);
+    this.timers.push(t3);
+
+  }
+
   createMechanic() {
     const w = this.canvas.width;
     const h = this.canvas.height;
@@ -138,10 +181,13 @@ export class GameScene {
     startBackgroundMusic();
 
     // Paula greets and reads instruction aloud
-    const t1 = setTimeout(() => {
-      speak('¡Hola! Soy Paula. ' + this.levelData.instruction, { rate: 0.75 });
-    }, 600);
-    this.timers.push(t1);
+    // Level 1: intro TTS is handled in startLevel1Flow()
+    if (this.levelData.id !== 1) {
+      const t1 = setTimeout(() => {
+        speak('¡Hola! Soy Paula. ' + this.levelData.instruction, { rate: 0.75 });
+      }, 600);
+      this.timers.push(t1);
+    }
   }
 
   // Tutorial system
@@ -212,7 +258,11 @@ export class GameScene {
   onTreatmentSuccess() {
     this.state = 'success';
     this.paula.setState('celebrate');
-    this.animal.heal();
+    if (this.levelData.id === 1 && this.animal.celebrate) {
+      this.animal.celebrate();
+    } else {
+      this.animal.heal();
+    }
 
     // Stop tutorial if active — mark as seen now that they succeeded
     if (this.tutorialHand) {
@@ -320,6 +370,7 @@ export class GameScene {
       if (target) {
         this.pointingTarget = target;
         this.pointingTimer = 4.0; // 4 seconds of pointing
+        this.paula.setState('pointing');
       }
     }
   }
@@ -544,6 +595,34 @@ export class GameScene {
 
     // Reset inactivity
     this.inactivityTimer = 0;
+
+    // Level 1 exploration phase: touch Pipo's zones
+    if (this.state === 'explore' && this.levelData.id === 1 && this.animal) {
+      const pipo = this.animal;
+      const zone = pipo.getTouchedZone?.(x, y);
+      if (zone) {
+        if (zone === 'head') pipo.touchHead();
+        else if (zone === 'body') pipo.touchBody();
+        else if (zone === 'paw') {
+          pipo.touchPaw();
+          // Touching the hurt paw accelerates the flow
+          if (this.exploreTimer) {
+            clearTimeout(this.exploreTimer);
+            this.exploreTimer = null;
+          }
+          // Move to playing after a short delay
+          const t = setTimeout(() => {
+            if (this.state === 'explore') {
+              this.state = 'playing';
+              this.createMechanic();
+              speak(this.levelData.instruction, { rate: 0.75 });
+            }
+          }, 1500);
+          this.timers.push(t);
+        }
+        return true;
+      }
+    }
 
     // Tutorial persists until correct answer (handled by mechanic) or long inactivity
     // Don't dismiss on random touches anymore

@@ -244,6 +244,58 @@ export function stopBackgroundMusic() {
   _musicOscillators = [];
 }
 
+/**
+ * Pipo character sounds — cute, characterful dog sounds
+ */
+
+/** Sniff sniff — soft breathy sound */
+export function playDogSniff() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  // White noise burst filtered to sound like sniffing
+  const bufferSize = ctx.sampleRate * 0.15;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 1;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.08, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  source.connect(filter);
+  filter.connect(g);
+  g.connect(ctx.destination);
+  source.start(t);
+  source.stop(t + 0.2);
+}
+
+/** Ouch — soft whimper when touching hurt paw */
+export function playDogOuch() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  playRamp({ type: 'sine', fromFreq: 350, toFreq: 280, duration: 0.2, gain: 0.06, when: t });
+  playRamp({ type: 'triangle', fromFreq: 320, toFreq: 260, duration: 0.25, gain: 0.04, when: t + 0.05 });
+}
+
+/** Happy bark — cheerful short barks */
+export function playDogBarkHappy() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = now();
+  // Two quick cheerful barks
+  playTone({ type: 'square', freq: 520, duration: 0.06, gain: 0.08, when: t });
+  playTone({ type: 'square', freq: 480, duration: 0.08, gain: 0.07, when: t + 0.12 });
+  playTone({ type: 'square', freq: 550, duration: 0.1, gain: 0.08, when: t + 0.22 });
+}
+
 /** Haptic vibration (Android only — iOS doesn't support Vibration API) */
 export function haptic(pattern) {
   if (navigator.vibrate) {

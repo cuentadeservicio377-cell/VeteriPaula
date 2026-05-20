@@ -8,8 +8,9 @@ export const levels = [
   {
     id: 1, biome: 'home', animal: 'perro', injury: 'pata',
     mechanic: 'choose_word',
-    question: 'El perrito tiene la pata lastimada. ¿Qué necesita?',
-    options: ['VENDA', 'HUESO', 'AGUA'],
+    instruction: 'Pipo se lastimó la pata. ¿Qué necesita?',
+    celebration: '¡Excelente! Pipo ya se siente mejor.',
+    options: ['VENDA', 'HUESO'],
     correct: 'VENDA',
     vocabulary: ['pata', 'venda', 'herida'],
     treatment: 'una venda en la pata'
