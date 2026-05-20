@@ -3,15 +3,16 @@ import { Paula } from './entities/Paula.js';
 import { TapWordMechanic } from './mechanics/TapWord.js';
 import { DragSyllablesMechanic } from './mechanics/DragSyllables.js';
 import { FollowStepsMechanic } from './mechanics/FollowSteps.js';
+import { TutorialHand } from './entities/TutorialHand.js';
 import { ParticleSystem } from '../utils/particles.js';
 import { tween, float } from '../utils/tween.js';
 import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
 import { createItemSprite } from './sprites/Items.js';
 import { speak, stopTTS, speakEncouragement, wakeUpSpeechSynthesis } from '../utils/tts.js';
-import { ensureAudioContext, playMagic, playDing } from '../utils/sfx.js';
+import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic } from '../utils/sfx.js';
 
 /**
- * v2.2 Game Scene — TTS on every interaction, reduced dead time, anti-frustration, SFX
+ * v2.3 Game Scene — Tutorial hand, Paula pointing, background music, star system
  */
 export class GameScene {
   constructor(canvas, levelData) {
@@ -33,6 +34,13 @@ export class GameScene {
     this.failCount = 0;
     this.inactivityTimer = 0;
     this.hintLevel = 0;
+
+    // Tutorial
+    this.tutorialHand = null;
+
+    // Paula pointing
+    this.pointingTarget = null;
+    this.pointingTimer = 0;
 
     this.decorations = [];
     this.soundSprite = null;
@@ -123,6 +131,12 @@ export class GameScene {
     this.mechanic.onSuccess = () => this.onTreatmentSuccess();
     this.mechanic.onFail = () => this.onTreatmentFail();
 
+    // Tutorial for first encounter of each mechanic
+    this.setupTutorial(mechanicType);
+
+    // Start background music
+    startBackgroundMusic();
+
     // Read instruction aloud after Paula settles
     const t = setTimeout(() => {
       speak(this.levelData.instruction, { rate: 0.75 });
@@ -130,10 +144,82 @@ export class GameScene {
     this.timers.push(t);
   }
 
+  // Tutorial system
+  setupTutorial(mechanicType) {
+    const tutorialLevels = {
+      'tap_word': [1],
+      'drag_syllables': [4],
+      'follow_steps': [5],
+      'follow_steps_drag': [11],
+    };
+
+    const needsTutorial = tutorialLevels[mechanicType]?.includes(this.levelData.id);
+    if (needsTutorial && !this.hasSeenTutorial(mechanicType)) {
+      this.markTutorialSeen(mechanicType);
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+
+      if (mechanicType === 'tap_word') {
+        const correctBtn = this.mechanic.buttons.find(b => b.isCorrect);
+        if (correctBtn) {
+          this.tutorialHand = new TutorialHand(
+            correctBtn.x + correctBtn.width / 2,
+            correctBtn.y - 50,
+            correctBtn.x + correctBtn.width / 2,
+            correctBtn.y + correctBtn.height / 2
+          );
+        }
+      } else if (mechanicType === 'drag_syllables') {
+        const firstBlock = this.mechanic.syllableBlocks[0];
+        const firstSlot = this.mechanic.slots[0];
+        if (firstBlock && firstSlot) {
+          this.tutorialHand = new TutorialHand(
+            firstBlock.x + firstBlock.width / 2,
+            firstBlock.y + firstBlock.height / 2,
+            firstSlot.x + firstSlot.width / 2,
+            firstSlot.y + firstSlot.height / 2
+          );
+        }
+      } else if (mechanicType === 'follow_steps' || mechanicType === 'follow_steps_drag') {
+        const firstObj = this.mechanic.stepObjects[0];
+        if (firstObj) {
+          this.tutorialHand = new TutorialHand(
+            firstObj.x + firstObj.width / 2,
+            firstObj.y + firstObj.height / 2,
+            w * 0.55 + 70,
+            h * 0.20 + 60
+          );
+        }
+      }
+    }
+  }
+
+  hasSeenTutorial(type) {
+    try {
+      const seen = JSON.parse(localStorage.getItem('vp_tutorials') || '{}');
+      return seen[type] === true;
+    } catch { return false; }
+  }
+
+  markTutorialSeen(type) {
+    try {
+      const seen = JSON.parse(localStorage.getItem('vp_tutorials') || '{}');
+      seen[type] = true;
+      localStorage.setItem('vp_tutorials', JSON.stringify(seen));
+    } catch {}
+  }
+
   onTreatmentSuccess() {
     this.state = 'success';
     this.paula.setState('celebrate');
     this.animal.heal();
+
+    // Stop tutorial if active
+    this.tutorialHand = null;
+    this.pointingTarget = null;
+
+    // Stop background music gently
+    stopBackgroundMusic();
 
     // SFX: magic arpeggio for level complete
     playMagic();
@@ -169,7 +255,7 @@ export class GameScene {
     }, 200);
     this.timers.push(t1);
 
-    // Move to celebrate state — reduced to 800ms (was 1500ms)
+    // Move to celebrate state
     const t2 = setTimeout(() => {
       this.state = 'celebrate';
       if (this.onComplete) this.onComplete();
@@ -181,16 +267,22 @@ export class GameScene {
     this.failCount++;
     this.inactivityTimer = 0;
 
-    // Escalate hint level
-    if (this.failCount === 2) {
-      this.activateHint(1); // Glow hint
-    } else if (this.failCount === 3) {
-      this.activateHint(2); // Paula points
-    } else if (this.failCount >= 4) {
-      this.activateHint(3); // Auto-move
+    // Hide tutorial on first interaction
+    if (this.tutorialHand) {
+      this.tutorialHand.done = true;
+      this.tutorialHand = null;
     }
 
-    // Adaptive TTS (more specific with more failures)
+    // Escalate hint level
+    if (this.failCount === 2) {
+      this.activateHint(1);
+    } else if (this.failCount === 3) {
+      this.activateHint(2);
+    } else if (this.failCount >= 4) {
+      this.activateHint(3);
+    }
+
+    // Adaptive TTS
     if (this.failCount === 1) {
       speakEncouragement();
     } else if (this.failCount === 2) {
@@ -213,6 +305,15 @@ export class GameScene {
     if (this.mechanic?.showHint) {
       this.mechanic.showHint(level);
     }
+
+    // Paula pointing (hint level 2)
+    if (level === 2) {
+      const target = this.mechanic.getCorrectTarget?.();
+      if (target) {
+        this.pointingTarget = target;
+        this.pointingTimer = 4.0; // 4 seconds of pointing
+      }
+    }
   }
 
   triggerPaulaMiniCheer() {
@@ -233,6 +334,22 @@ export class GameScene {
     if (this.mechanic && this.state === 'playing') this.mechanic.update(dt);
     this.particles.update(dt);
 
+    // Update tutorial hand
+    if (this.tutorialHand && this.state === 'playing') {
+      this.tutorialHand.update(dt);
+    }
+
+    // Update Paula pointing timer
+    if (this.pointingTarget && this.pointingTimer > 0) {
+      this.pointingTimer -= dt;
+      if (this.pointingTimer <= 0) {
+        this.pointingTarget = null;
+        if (this.paula.state === 'pointing') {
+          this.paula.setState('idle');
+        }
+      }
+    }
+
     // Detect inactivity for hints
     if (this.state === 'playing' && !this.mechanic?.completed) {
       this.inactivityTimer += dt;
@@ -249,6 +366,16 @@ export class GameScene {
     this.particles.render(ctx);
     if (this.mechanic && this.state === 'playing') this.mechanic.render(ctx);
 
+    // Render Paula pointing line
+    if (this.pointingTarget && this.paula) {
+      this.renderPointingLine(ctx);
+    }
+
+    // Render tutorial hand on top of everything
+    if (this.tutorialHand && this.state === 'playing' && !this.tutorialHand.done) {
+      this.tutorialHand.render(ctx);
+    }
+
     // Skip indicator during success state
     if (this.state === 'success' && this.stateTimer > 0.4) {
       ctx.save();
@@ -262,6 +389,43 @@ export class GameScene {
 
     this.renderLevelBadge(ctx);
     this.renderSoundButton(ctx, width);
+  }
+
+  renderPointingLine(ctx) {
+    if (!this.pointingTarget) return;
+    const startX = this.paula.centerX();
+    const startY = this.paula.y + this.paula.height * 0.3;
+    const endX = this.pointingTarget.x;
+    const endY = this.pointingTarget.y;
+
+    ctx.save();
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([10, 8]);
+    ctx.lineDashOffset = -Date.now() / 25; // Animated marching ants
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    // Quadratic curve for organic feel
+    ctx.quadraticCurveTo(
+      (startX + endX) / 2,
+      Math.min(startY, endY) - 40,
+      endX,
+      endY
+    );
+    ctx.stroke();
+
+    // Arrow/pulse at target
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 15;
+    const pulse = 1 + Math.sin(Date.now() * 0.008) * 0.2;
+    ctx.beginPath();
+    ctx.arc(endX, endY, 8 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
   }
 
   renderBackground(ctx, w, h) {
@@ -350,7 +514,6 @@ export class GameScene {
   }
 
   handleTouch(x, y) {
-    // Wake up audio + TTS on first touch
     wakeUpSpeechSynthesis();
     ensureAudioContext();
 
@@ -365,6 +528,7 @@ export class GameScene {
       this.timers.forEach(t => clearTimeout(t));
       this.timers = [];
       stopTTS();
+      stopBackgroundMusic();
       this.state = 'celebrate';
       if (this.onComplete) this.onComplete();
       return true;
@@ -372,6 +536,12 @@ export class GameScene {
 
     // Reset inactivity
     this.inactivityTimer = 0;
+
+    // Hide tutorial on first touch
+    if (this.tutorialHand) {
+      this.tutorialHand.done = true;
+      this.tutorialHand = null;
+    }
 
     if (this.state === 'playing' && this.mechanic) {
       return this.mechanic.handleTouch(x, y);
@@ -404,6 +574,7 @@ export class GameScene {
 
   destroy() {
     stopTTS();
+    stopBackgroundMusic();
     this.timers.forEach(t => clearTimeout(t));
     this.timers = [];
     if (this.floatAnim) this.floatAnim.stop();

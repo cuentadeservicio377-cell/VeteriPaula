@@ -147,6 +147,67 @@ export function playMagic() {
   });
 }
 
+/** Background music — gentle pentatonic loop */
+let _musicInterval = null;
+let _musicOscillators = [];
+
+export function startBackgroundMusic() {
+  const ctx = getCtx();
+  if (!ctx) return;
+
+  stopBackgroundMusic();
+
+  // Pentatonic scale: C4, D4, E4, G4, A4, C5
+  const scale = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3];
+  const t = now();
+
+  // Create a soft pad with 3 oscillators at different octaves
+  const createPad = (freq, gain, detune) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    osc.detune.value = detune || 0;
+    filter.type = 'lowpass';
+    filter.frequency.value = 800;
+    g.gain.value = gain;
+    osc.connect(filter);
+    filter.connect(g);
+    g.connect(ctx.destination);
+    osc.start(t);
+    return { osc, g };
+  };
+
+  // Root + fifth + octave for a soft chord pad
+  _musicOscillators.push(createPad(scale[0], 0.025, -5));
+  _musicOscillators.push(createPad(scale[3], 0.02, 3));
+  _musicOscillators.push(createPad(scale[5], 0.015, -2));
+
+  // Gentle arpeggio every ~4 seconds
+  let noteIndex = 0;
+  _musicInterval = setInterval(() => {
+    const note = scale[noteIndex % scale.length];
+    playTone({ type: 'sine', freq: note, duration: 1.5, gain: 0.04, when: now() });
+    noteIndex++;
+  }, 3800);
+}
+
+export function stopBackgroundMusic() {
+  if (_musicInterval) {
+    clearInterval(_musicInterval);
+    _musicInterval = null;
+  }
+  _musicOscillators.forEach(({ osc, g }) => {
+    try {
+      const t = now();
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.stop(t + 0.6);
+    } catch (e) {}
+  });
+  _musicOscillators = [];
+}
+
 /** Haptic vibration (Android only — iOS doesn't support Vibration API) */
 export function haptic(pattern) {
   if (navigator.vibrate) {

@@ -14,7 +14,8 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
 
   const handleComplete = useCallback(() => {
     if (gameLoopRef.current) gameLoopRef.current.stop();
-    if (onComplete) onComplete();
+    const failCount = sceneRef.current?.failCount || 0;
+    if (onComplete) onComplete(failCount);
   }, [onComplete]);
 
   useEffect(() => {

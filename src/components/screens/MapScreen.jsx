@@ -16,6 +16,7 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
 
   const isUnlocked = (levelId) => levelId <= progress.currentLevel;
   const isCompleted = (levelId) => progress.completedLevels.includes(levelId);
+  const getStars = (levelId) => progress.stars?.[levelId] || 0;
 
   // Pre-generate sprite URLs
   const [spriteUrls, setSpriteUrls] = useState({});
@@ -85,6 +86,7 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
               {blockLevels.map(level => {
                 const unlocked = isUnlocked(level.id);
                 const completed = isCompleted(level.id);
+                const stars = getStars(level.id);
                 const animalUrl = spriteUrls[`animal_${level.animal}`];
 
                 return (
@@ -96,7 +98,7 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
                     }}
                     disabled={!unlocked}
                     style={{
-                      width: '60px', height: '60px', borderRadius: '16px', border: 'none',
+                      width: '60px', height: '72px', borderRadius: '16px', border: 'none',
                       fontSize: '1.4rem', fontWeight: 'bold', fontFamily: 'Nunito, sans-serif',
                       cursor: unlocked ? 'pointer' : 'default',
                       background: completed ? block.color : unlocked ? '#FFF' : '#E8E8E8',
@@ -104,17 +106,27 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
                       boxShadow: completed ? `0 3px 12px ${block.color}40` : '0 2px 6px rgba(0,0,0,0.08)',
                       opacity: unlocked ? 1 : 0.5,
                       transition: 'transform 0.15s ease',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: '2px',
+                      padding: '4px 0',
                     }}
                     onMouseEnter={(e) => unlocked && (e.target.style.transform = 'scale(1.12)')}
                     onMouseLeave={(e) => unlocked && (e.target.style.transform = 'scale(1)')}
                   >
-                    {completed && spriteUrls.star ? (
-                      <img src={spriteUrls.star} alt="Completado" style={{ ...imgStyle, width: '28px', height: '28px' }} />
-                    ) : animalUrl ? (
-                      <img src={animalUrl} alt={level.animal} style={{ ...imgStyle, width: '36px', height: '32px' }} />
+                    {completed && stars > 0 ? (
+                      <div style={{ display: 'flex', gap: '1px' }}>
+                        {[1, 2, 3].map(s => (
+                          <img key={s} src={spriteUrls.star} alt="" style={{
+                            ...imgStyle, width: '14px', height: '14px',
+                            opacity: s <= stars ? 1 : 0.2,
+                          }} />
+                        ))}
+                      </div>
+                    ) : null}
+                    {animalUrl ? (
+                      <img src={animalUrl} alt={level.animal} style={{ ...imgStyle, width: '32px', height: '28px' }} />
                     ) : (
-                      level.id
+                      <span style={{ fontSize: '0.9rem' }}>{level.id}</span>
                     )}
                   </button>
                 );

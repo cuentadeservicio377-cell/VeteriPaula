@@ -15,6 +15,7 @@ function App() {
   const [progress, setProgress] = useState(getProgress());
   const [levelData, setLevelData] = useState(null);
   const [nextBiome, setNextBiome] = useState('clinica');
+  const [lastStars, setLastStars] = useState(3);
 
   const [homeIconUrl, setHomeIconUrl] = useState('');
   useEffect(() => {
@@ -46,8 +47,11 @@ function App() {
     startGame(progress.currentLevel);
   }, [progress.currentLevel, startGame]);
 
-  const handleLevelComplete = useCallback(() => {
-    const newProgress = completeLevel(currentLevel);
+  const handleLevelComplete = useCallback((failCount) => {
+    // Calculate stars: 0 fails = 3★, 1-2 fails = 2★, 3+ fails = 1★
+    const stars = failCount === 0 ? 3 : failCount <= 2 ? 2 : 1;
+    setLastStars(stars);
+    const newProgress = completeLevel(currentLevel, stars);
     setProgress(newProgress);
     setScreen('celebration');
   }, [currentLevel]);
@@ -100,7 +104,7 @@ function App() {
       );
     case 'celebration':
       if (!levelData) return null;
-      return <CelebrationScreen levelData={levelData} onNext={handleNextLevel} onHome={() => setScreen('home')} />;
+      return <CelebrationScreen levelData={levelData} stars={lastStars} onNext={handleNextLevel} onHome={() => setScreen('home')} />;
     default:
       return <HomeScreen onPlay={handlePlay} onSelectLevel={() => setScreen('map')} onReset={handleReset} />;
   }

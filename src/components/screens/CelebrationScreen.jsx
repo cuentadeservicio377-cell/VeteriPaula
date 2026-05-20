@@ -2,10 +2,8 @@ import { useEffect } from 'react';
 import { characters, getCelebrationMessage } from '../../data/characters.js';
 import { useTTS } from '../../hooks/useTTS.js';
 import { useFamilySprite, useIconSprite } from '../../hooks/usePixelArt.js';
-import { ANIMAL_SPRITES } from '../../game-engine/sprites/Characters.js';
-import { spriteToDataURL } from '../../utils/spriteToImage.js';
 
-export default function CelebrationScreen({ levelData, onNext, onHome }) {
+export default function CelebrationScreen({ levelData, stars, onNext, onHome }) {
   const { speak } = useTTS();
   const characterKey = levelData.character || 'mama';
   const character = characters[characterKey];
@@ -25,10 +23,8 @@ export default function CelebrationScreen({ levelData, onNext, onHome }) {
   }, [speak, message]);
 
   const starStyle = {
-    position: 'absolute',
-    width: '32px',
-    height: '32px',
-    animation: 'bounce 1s ease infinite',
+    width: '36px',
+    height: '36px',
     imageRendering: 'pixelated',
   };
 
@@ -36,19 +32,51 @@ export default function CelebrationScreen({ levelData, onNext, onHome }) {
     <div className="screen-container" style={{
       background: `linear-gradient(180deg, ${character?.color || '#FFF8F0'}30 0%, #FFF8F0 100%)`
     }}>
-      {/* Pixel art stars */}
+      {/* Floating stars background */}
       {starUrl && (
         <>
-          <img src={starUrl} alt="" style={{ ...starStyle, top: '10%', left: '20%' }} />
-          <img src={starUrl} alt="" style={{ ...starStyle, top: '15%', right: '15%', animationDelay: '0.3s' }} />
-          <img src={starUrl} alt="" style={{ ...starStyle, top: '20%', left: '10%', animationDelay: '0.6s' }} />
+          <img src={starUrl} alt="" style={{ position: 'absolute', top: '10%', left: '20%', width: '32px', height: '32px', animation: 'bounce 1s ease infinite', imageRendering: 'pixelated' }} />
+          <img src={starUrl} alt="" style={{ position: 'absolute', top: '15%', right: '15%', width: '32px', height: '32px', animation: 'bounce 1s ease infinite 0.3s', imageRendering: 'pixelated' }} />
+          <img src={starUrl} alt="" style={{ position: 'absolute', top: '20%', left: '10%', width: '32px', height: '32px', animation: 'bounce 1s ease infinite 0.6s', imageRendering: 'pixelated' }} />
         </>
       )}
+
+      {/* Star rating */}
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        marginBottom: '15px',
+        animation: 'scaleIn 0.4s ease',
+      }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{
+            ...starStyle,
+            opacity: i <= stars ? 1 : 0.25,
+            transform: i <= stars ? 'scale(1.1)' : 'scale(0.9)',
+            transition: 'all 0.3s ease',
+            filter: i <= stars ? 'drop-shadow(0 2px 8px rgba(255,215,0,0.5))' : 'none',
+          }}>
+            {starUrl && (
+              <img src={starUrl} alt="" style={{ width: '100%', height: '100%', imageRendering: 'pixelated' }} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p style={{
+        fontSize: '1rem',
+        color: '#8D6E63',
+        fontWeight: 700,
+        margin: '0 0 10px 0',
+        animation: 'fadeIn 0.5s ease 0.2s both',
+      }}>
+        {stars === 3 ? '¡Perfecto! Sin errores' : stars === 2 ? '¡Muy bien!' : '¡Lo lograste!'}
+      </p>
 
       {/* Family character pixel art */}
       <div style={{
         marginBottom: '10px',
-        animation: 'scaleIn 0.5s ease',
+        animation: 'scaleIn 0.5s ease 0.3s both',
       }}>
         {familySpriteUrl ? (
           <img
@@ -83,7 +111,7 @@ export default function CelebrationScreen({ levelData, onNext, onHome }) {
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
         marginBottom: '30px',
         position: 'relative',
-        animation: 'scaleIn 0.6s ease 0.2s both'
+        animation: 'scaleIn 0.6s ease 0.4s both'
       }}>
         <div style={{
           position: 'absolute',
@@ -107,7 +135,7 @@ export default function CelebrationScreen({ levelData, onNext, onHome }) {
         </p>
       </div>
 
-      {/* Replay TTS button with pixel art icon */}
+      {/* Replay TTS button */}
       <button
         onClick={() => speak(message)}
         style={{
