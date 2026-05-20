@@ -3,7 +3,7 @@
  * Avatar World style: simple, vibrant, blocky
  */
 
-import { PixelSprite, PALETTE } from '../entities/PixelSprite.js';
+import { PixelSprite, PALETTE, parsePixelLine } from '../entities/PixelSprite.js';
 
 // Tiny flower sprites (5x5 to 7x7)
 const FLOWER_PINK = [
@@ -112,7 +112,7 @@ const PIXEL_DEFS = {
 export function createDecoration(type, x, y, scale = 4) {
   const def = PIXEL_DEFS[type];
   if (!def) return null;
-  const pixels = def.map(line => line.trim().split(''));
+  const pixels = def.map(line => parsePixelLine(line));
   return new PixelSprite({ pixels, palette: PALETTE }, { x, y, scale });
 }
 

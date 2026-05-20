@@ -11,8 +11,9 @@ export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
   const [progress, setProgress] = useState(null);
   useEffect(() => { setProgress(getProgress()); }, []);
 
-  // Pre-generate sprite URLs
-  const sprites = useMemo(() => {
+  // Pre-generate sprite URLs (client-side only via useEffect)
+  const [sprites, setSprites] = useState({});
+  useEffect(() => {
     const urls = {};
     urls.perro = getAnimalSpriteUrl('perro', 3);
     urls.gato = getAnimalSpriteUrl('gato', 3);
@@ -36,7 +37,7 @@ export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
     urls.arrowRight = spriteToDataURL(ICON_SPRITES.arrowRight, 4);
     urls.arrowLeft = spriteToDataURL(ICON_SPRITES.arrowLeft, 4);
     urls.check = spriteToDataURL(ICON_SPRITES.check, 4);
-    return urls;
+    setSprites(urls);
   }, []);
 
   return (

@@ -98,7 +98,15 @@ export class PixelSprite {
         if (!code || code === 'T') continue;
 
         const color = this.palette[code];
-        if (!color) continue;
+        if (!color) {
+          // Debug: log unknown palette codes once
+          if (!window.__pixelDebug) window.__pixelDebug = new Set();
+          if (!window.__pixelDebug.has(code)) {
+            window.__pixelDebug.add(code);
+            console.warn('Unknown pixel code:', code, 'in palette');
+          }
+          continue;
+        }
 
         const px = this.x + col * this.scale;
         const py = this.y + row * this.scale;
@@ -198,9 +206,29 @@ export class AnimatedPixelSprite {
   }
 }
 
+/**
+ * Parse a pixel line string into an array of color codes.
+ * 'T' is a single-char transparent code. All other codes are 2 chars (e.g. H1, S1, E2).
+ */
+export function parsePixelLine(line) {
+  const result = [];
+  let i = 0;
+  const trimmed = line.trim();
+  while (i < trimmed.length) {
+    if (trimmed[i] === 'T') {
+      result.push('T');
+      i++;
+    } else {
+      result.push(trimmed.substring(i, i + 2));
+      i += 2;
+    }
+  }
+  return result;
+}
+
 // Helper to create a sprite from pixel data
 export function createSprite(pixelString, scale = 6) {
   const lines = pixelString.trim().split('\n').filter(l => l.trim());
-  const pixels = lines.map(line => line.trim().split(''));
+  const pixels = lines.map(line => parsePixelLine(line));
   return new PixelSprite({ pixels }, { scale });
 }

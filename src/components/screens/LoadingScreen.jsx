@@ -26,26 +26,24 @@ export default function LoadingScreen({ nextBiome, onReady }) {
   const [progress, setProgress] = useState(0);
   const { speak } = useTTS();
 
-  // Pre-generate sprite URLs
-  const spriteUrls = useMemo(() => {
+  // Pre-generate sprite URLs (client-side only)
+  const [spriteUrls, setSpriteUrls] = useState({});
+  useEffect(() => {
     const urls = {};
-    // Animal sprites
     const animals = ['perro', 'gato', 'conejo', 'pajaro', 'tortuga', 'vaca', 'gallina', 'caballo', 'oveja', 'pato', 'zorro', 'ardilla', 'erizo', 'buho', 'ciervo', 'mono', 'tucan', 'jaguar', 'delfin'];
     animals.forEach(a => {
       urls[a] = getAnimalSpriteUrl(a, 4);
     });
-    // Item sprites
     Object.keys(ITEM_DEFS).forEach(key => {
       urls[key] = spriteToDataURL(ITEM_DEFS[key], 4);
     });
-    // Icon sprites
     urls.book = spriteToDataURL(ICON_SPRITES.book, 4);
     urls.eye = spriteToDataURL(ICON_SPRITES.eye, 4);
     urls.arrowLeft = spriteToDataURL(ICON_SPRITES.arrowLeft, 4);
     urls.arrowRight = spriteToDataURL(ICON_SPRITES.arrowRight, 4);
     urls.check = spriteToDataURL(ICON_SPRITES.check, 4);
     urls.star = spriteToDataURL(ICON_SPRITES.star, 4);
-    return urls;
+    setSpriteUrls(urls);
   }, []);
 
   // Get sprite for a word

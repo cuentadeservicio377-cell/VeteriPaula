@@ -4,7 +4,7 @@
  * Each character rendered at 5-6x scale for chunky pixel look
  */
 
-import { PixelSprite, AnimatedPixelSprite, PALETTE } from '../entities/PixelSprite.js';
+import { PixelSprite, AnimatedPixelSprite, PALETTE, parsePixelLine } from '../entities/PixelSprite.js';
 
 // ============================================================
 // PAULA — The Veterinarian (24x20 sprite)
@@ -106,7 +106,7 @@ export function createPaula(scale = 5) {
   const states = {};
   const defs = { idle: PAULA_IDLE, worried: PAULA_WORRIED, celebrate: PAULA_CELEBRATE, walk: PAULA_WALK };
   for (const [state, pixels] of Object.entries(defs)) {
-    states[state] = new PixelSprite({ pixels: pixels.map(l => l.trim().split('')), palette: PALETTE }, { scale });
+    states[state] = new PixelSprite({ pixels: pixels.map(l => parsePixelLine(l)), palette: PALETTE }, { scale });
   }
   return new AnimatedPixelSprite(states, { scale, initialState: 'idle' });
 }
@@ -857,8 +857,8 @@ const TOUCAN_HAPPY = [
 ];
 
 function makeAnimalSprite(hurtPixels, happyPixels, scale = 5) {
-  const hurtArray = hurtPixels.map(l => l.trim().split(''));
-  const happyArray = happyPixels.map(l => l.trim().split(''));
+  const hurtArray = hurtPixels.map(l => parsePixelLine(l));
+  const happyArray = happyPixels.map(l => parsePixelLine(l));
   const frames = {
     hurt: new PixelSprite({ pixels: hurtArray, palette: PALETTE }, { scale }),
     healing: new PixelSprite({ pixels: hurtArray, palette: PALETTE }, { scale }),

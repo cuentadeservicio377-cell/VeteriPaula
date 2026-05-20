@@ -3,7 +3,7 @@
  * Avatar World style: blocky, simple, vibrant
  */
 
-import { PixelSprite, PALETTE } from '../entities/PixelSprite.js';
+import { PixelSprite, PALETTE, parsePixelLine } from '../entities/PixelSprite.js';
 
 // Water drop 💧
 const WATER_PIXELS = [
@@ -191,7 +191,7 @@ export const ITEM_DEFS = {
 export function createItemSprite(type, x, y, scale = 4) {
   const def = ITEM_DEFS[type];
   if (!def) return null;
-  const pixels = def.map(l => l.trim().split(''));
+  const pixels = def.map(l => parsePixelLine(l));
   return new PixelSprite({ pixels, palette: PALETTE }, { x, y, scale });
 }
 

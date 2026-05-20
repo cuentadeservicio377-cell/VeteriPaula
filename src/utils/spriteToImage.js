@@ -3,12 +3,12 @@
  * Caches results for performance. SSR-safe.
  */
 
-import { PALETTE } from '../game-engine/entities/PixelSprite.js';
+import { PALETTE, parsePixelLine } from '../game-engine/entities/PixelSprite.js';
 
 const cache = new Map();
 
 function renderToCanvas(pixelLines, scale) {
-  const pixels = pixelLines.map(line => line.trim().split(''));
+  const pixels = pixelLines.map(line => parsePixelLine(line));
   const height = pixels.length;
   const width = pixels[0]?.length || 0;
 
@@ -33,11 +33,17 @@ function renderToCanvas(pixelLines, scale) {
 
 export function spriteToDataURL(pixelLines, scale = 4) {
   if (typeof document === 'undefined') return '';
-  const cacheKey = pixelLines.join('') + '_' + scale;
-  if (cache.has(cacheKey)) return cache.get(cacheKey);
-  const dataURL = renderToCanvas(pixelLines, scale);
-  cache.set(cacheKey, dataURL);
-  return dataURL;
+  try {
+    if (!pixelLines || pixelLines.length === 0) return '';
+    const cacheKey = pixelLines.join('') + '_' + scale;
+    if (cache.has(cacheKey)) return cache.get(cacheKey);
+    const dataURL = renderToCanvas(pixelLines, scale);
+    cache.set(cacheKey, dataURL);
+    return dataURL;
+  } catch (e) {
+    console.error('spriteToDataURL error:', e);
+    return '';
+  }
 }
 
 export function createSpriteImage(pixelLines, scale = 4) {

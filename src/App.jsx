@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getProgress, completeLevel, resetProgress } from './utils/storage.js';
 import { getLevel, getTotalLevels, getBlocks, getBlockForLevel } from './data/levels-v2.js';
 import { getCharacterForLevel } from './data/characters.js';
@@ -16,7 +16,10 @@ function App() {
   const [levelData, setLevelData] = useState(null);
   const [nextBiome, setNextBiome] = useState('clinica');
 
-  const homeIconUrl = useMemo(() => getIconSpriteUrl('arrowLeft', 4), []);
+  const [homeIconUrl, setHomeIconUrl] = useState('');
+  useEffect(() => {
+    setHomeIconUrl(getIconSpriteUrl('arrowLeft', 4));
+  }, []);
 
   const startGame = useCallback((levelId) => {
     const data = getLevel(levelId);
