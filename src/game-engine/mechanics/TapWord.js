@@ -103,10 +103,14 @@ export class TapWordMechanic {
     this.buttons.forEach(btn => btn.render(ctx));
 
     // Render flying bandage
-    if (this.flyingItem) {
+    if (this.flyingItem && this.flyingItem.sprite) {
       ctx.save();
-      ctx.globalAlpha = this.flyingItem.alpha;
+      ctx.globalAlpha = this.flyingItem.alpha || 1;
+      // Debug glow around flying item
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur = 20;
       this.flyingItem.sprite.render(ctx);
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
 
@@ -159,9 +163,11 @@ export class TapWordMechanic {
         // Create a flying item sprite that "sticks" to the animal's leg
         const spriteType = STEP_TO_SPRITE[btn.word.toUpperCase()];
         if (spriteType && animal) {
+          const sprite = createItemSprite(spriteType, targetX, targetY, 5);
+          console.log('Created flyingItem:', spriteType, 'at', targetX, targetY, 'sprite:', sprite);
           this.flyingItem = {
-            sprite: createItemSprite(spriteType, targetX, targetY, 4),
-            timer: 1.8,
+            sprite: sprite,
+            timer: 2.0,
             phase: 'stick',
             alpha: 1,
           };
