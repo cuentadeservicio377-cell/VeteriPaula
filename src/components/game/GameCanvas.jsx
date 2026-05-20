@@ -22,6 +22,13 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Ensure canvas has correct size before creating scene
+    const parent = canvas.parentElement;
+    if (parent) {
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+    }
+
     const scene = new GameScene(canvas, levelData);
     scene.onComplete = handleComplete;
     scene.onFail = onFail;

@@ -163,10 +163,8 @@ export class TapWordMechanic {
         // Create a flying item sprite that "sticks" to the animal's leg
         const spriteType = STEP_TO_SPRITE[btn.word.toUpperCase()];
         if (spriteType && animal) {
-          const sprite = createItemSprite(spriteType, targetX, targetY, 5);
-          console.log('Created flyingItem:', spriteType, 'at', targetX, targetY, 'sprite:', sprite);
           this.flyingItem = {
-            sprite: sprite,
+            sprite: createItemSprite(spriteType, targetX, targetY, 5),
             timer: 2.0,
             phase: 'stick',
             alpha: 1,

@@ -51,7 +51,6 @@ export class GameScene {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    console.log('GameScene setupScene canvas size:', w, h);
     // Paula enters from left
     this.paula = new Paula(-120, h * 0.35, { state: 'walk', scale: 6 });
 
@@ -59,7 +58,6 @@ export class GameScene {
     this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
       state: 'hurt', injury: this.levelData.injury, scale: 6
     });
-    console.log('Animal created at:', this.animal.x, this.animal.y);
 
     // Animate Paula walking in
     tween({
