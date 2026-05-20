@@ -8,7 +8,7 @@ import { createAnimal } from '../sprites/Characters.js';
  */
 export class Animal extends Entity {
   constructor(x, y, typeOrSprite, options = {}) {
-    super(x, y, 80, 80);
+    super(x, y, 1, 1);
 
     // Support both: new Animal(x, y, 'dog', {scale:6}) and new Animal(x, y, spriteObj)
     if (typeof typeOrSprite === 'string') {
@@ -17,6 +17,13 @@ export class Animal extends Entity {
     } else {
       this.type = options.type || 'unknown';
       this.sprite = typeOrSprite;
+    }
+
+    // Sync Entity dimensions to actual sprite size
+    const frame = this.sprite?.frames?.[this.sprite.currentState];
+    if (frame) {
+      this.width = frame.width * this.sprite.scale;
+      this.height = frame.height * this.sprite.scale;
     }
 
     this.state = options.state || 'idle'; // idle | hurt | healing | happy | confused
@@ -78,18 +85,24 @@ export class Animal extends Entity {
   draw(ctx) {
     if (!this.sprite) return;
 
+    // Render sprite directly in canvas space (bypass Entity transform)
+    // to avoid double-translation with PixelSprite's own transform
     ctx.save();
-    ctx.translate(this.x, this.y);
-    // Apply head shake rotation
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Apply head shake rotation around sprite center
     if (this.headShake !== 0) {
-      ctx.translate(0, -20); // Pivot around neck/head area
+      const cx = this.sprite.centerX();
+      const cy = this.sprite.centerY() - 20;
+      ctx.translate(cx, cy);
       ctx.rotate((this.headShake * Math.PI) / 180);
-      ctx.translate(0, 20);
+      ctx.translate(-cx, -cy);
     }
+
     this.sprite.render(ctx);
     ctx.restore();
 
-    // Thought bubble
+    // Thought bubble (also in canvas space)
     if (this.reactionText) {
       this.drawReactionBubble(ctx);
     }
