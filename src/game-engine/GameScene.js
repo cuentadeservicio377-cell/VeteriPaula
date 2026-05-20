@@ -5,6 +5,7 @@ import { DragSyllablesMechanic } from './mechanics/DragSyllables.js';
 import { FollowStepsMechanic } from './mechanics/FollowSteps.js';
 import { ParticleSystem } from '../utils/particles.js';
 import { tween, float } from '../utils/tween.js';
+import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
 
 /**
  * v2.0 Game Scene — Rich animations, particles, tweening, anti-frustration
@@ -24,6 +25,7 @@ export class GameScene {
     this.onFail = null;
     this.floatAnim = null;
 
+    this.decorations = [];
     this.setupScene();
   }
 
@@ -32,11 +34,11 @@ export class GameScene {
     const h = this.canvas.height;
 
     // Paula enters from left
-    this.paula = new Paula(-120, h * 0.22, { state: 'walk', size: 100 });
+    this.paula = new Paula(-120, h * 0.22, { state: 'walk', scale: 5 });
 
     // Animal waits on the right, hurt
     this.animal = new Animal(w * 0.55, h * 0.15, this.levelData.animal, {
-      state: 'hurt', injury: this.levelData.injury, size: 110
+      state: 'hurt', injury: this.levelData.injury, scale: 5
     });
 
     // Animate Paula walking in
@@ -55,6 +57,33 @@ export class GameScene {
 
     // Start floating animation for animal
     this.floatAnim = float(this.animal, 4, 1.5);
+
+    // Create pixel art decorations
+    this.createDecorations();
+  }
+
+  createDecorations() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Flowers along the ground
+    this.decorations = [];
+    for (let i = 0; i < 7; i++) {
+      const type = FLOWER_TYPES[i % FLOWER_TYPES.length];
+      const fx = w * (0.08 + i * 0.14);
+      const fy = h * 0.88 + (i % 2 === 0 ? 0 : 15);
+      this.decorations.push({
+        sprite: createDecoration(type, fx, fy, 4),
+        baseY: fy,
+        swayOffset: i * 1.3,
+      });
+    }
+
+    // Biome decoration
+    const biomeType = BIOME_DECO[this.levelData.biome];
+    if (biomeType) {
+      this.biomeDeco = createDecoration(biomeType, w * 0.82, h * 0.08, 4);
+    }
   }
 
   createMechanic() {
@@ -203,31 +232,20 @@ export class GameScene {
     ctx.ellipse(w / 2, h, w * 0.95, h * 0.2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flowers
-    ctx.font = '22px sans-serif';
-    ctx.textAlign = 'center';
-    const flowers = ['🌸', '🌼', '🌻', '🌺', '🌷', '🌹', '💐'];
-    for (let i = 0; i < 6; i++) {
-      const fx = w * (0.1 + i * 0.16);
-      const fy = h * 0.9 + Math.sin(time * 2 + i * 1.3) * 4;
-      ctx.globalAlpha = 0.7;
-      ctx.fillText(flowers[i], fx, fy);
-    }
-    ctx.globalAlpha = 1;
+    // Pixel art flowers (swaying)
+    this.decorations.forEach((deco, i) => {
+      if (deco.sprite) {
+        deco.sprite.y = deco.baseY + Math.sin(time * 2 + deco.swayOffset) * 4;
+        deco.sprite.render(ctx);
+      }
+    });
 
-    // Biome emoji decorations
-    const biomeEmojis = {
-      clinica: { emoji: '🏠', x: w * 0.88, y: h * 0.12 },
-      granja: { emoji: '🚜', x: w * 0.88, y: h * 0.12 },
-      bosque: { emoji: '🦋', x: w * 0.88, y: h * 0.12 },
-      selva: { emoji: '🦜', x: w * 0.88, y: h * 0.12 },
-    };
-    const deco = biomeEmojis[this.levelData.biome];
-    if (deco) {
-      ctx.font = '40px sans-serif';
-      ctx.globalAlpha = 0.3;
-      ctx.fillText(deco.emoji, deco.x, deco.y);
-      ctx.globalAlpha = 1;
+    // Biome decoration (pixel art)
+    if (this.biomeDeco) {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      this.biomeDeco.render(ctx);
+      ctx.restore();
     }
   }
 
