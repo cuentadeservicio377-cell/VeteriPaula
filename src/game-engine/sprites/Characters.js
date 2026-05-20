@@ -897,6 +897,14 @@ export function createAnimal(type, x, y, scale = 5) {
   return sprite;
 }
 
+// Export Paula defs for React
+export const PAULA_PIXEL_DEFS = {
+  idle: PAULA_IDLE,
+  worried: PAULA_WORRIED,
+  celebrate: PAULA_CELEBRATE,
+  walk: PAULA_WALK,
+};
+
 // Export raw pixel defs for React data URL generation
 export const ANIMAL_PIXEL_DEFS = {
   perro:     DOG_HURT,

@@ -1,42 +1,27 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { getProgress } from '../../utils/storage.js';
 import { getAnimalSpriteUrl } from '../../hooks/usePixelArt.js';
 import { spriteToDataURL } from '../../utils/spriteToImage.js';
-import { ANIMAL_PIXEL_DEFS } from '../../game-engine/sprites/Characters.js';
+import { PAULA_PIXEL_DEFS } from '../../game-engine/sprites/Characters.js';
 import { ICON_SPRITES } from '../../game-engine/sprites/UI.js';
 
 const PIXEL_STYLE = { imageRendering: 'pixelated', display: 'block' };
 
 export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
   const [progress, setProgress] = useState(null);
+  const [sprites, setSprites] = useState({});
+
   useEffect(() => { setProgress(getProgress()); }, []);
 
-  // Pre-generate sprite URLs (client-side only via useEffect)
-  const [sprites, setSprites] = useState({});
   useEffect(() => {
     const urls = {};
-    urls.perro = getAnimalSpriteUrl('perro', 3);
-    urls.gato = getAnimalSpriteUrl('gato', 3);
-    urls.conejo = getAnimalSpriteUrl('conejo', 3);
-    urls.paula = spriteToDataURL([
-      'TTTTTH1H1H1H1H1TTTT',
-      'TTTH1H1S1S1S1H1H1TTT',
-      'TTH1S1E2E2E2S1H1TT',
-      'TS1E2E1E3E1E2S1T',
-      'TS1E2E1E3E1E2S1T',
-      'TS1S1B1TTB1S1S1T',
-      'TS1S1S1S1S1S1S1T',
-      'TC1C1C1C1C1C1C1T',
-      'TC1C1C2C2C1C1C1T',
-      'TC1C1C2C2C1C1C1T',
-      'TC1C1C1C1C1C1C1T',
-      'TTTC5C5C5TTTT',
-      'TTTC5C5C5TTTT',
-    ], 4);
+    urls.perro = getAnimalSpriteUrl('perro', 4);
+    urls.gato = getAnimalSpriteUrl('gato', 4);
+    urls.conejo = getAnimalSpriteUrl('conejo', 4);
+    urls.paula = spriteToDataURL(PAULA_PIXEL_DEFS.idle, 6);
     urls.star = spriteToDataURL(ICON_SPRITES.star, 4);
     urls.arrowRight = spriteToDataURL(ICON_SPRITES.arrowRight, 4);
     urls.arrowLeft = spriteToDataURL(ICON_SPRITES.arrowLeft, 4);
-    urls.check = spriteToDataURL(ICON_SPRITES.check, 4);
     setSprites(urls);
   }, []);
 
@@ -44,13 +29,13 @@ export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
     <div className="screen-container" style={{ background: 'linear-gradient(180deg, #FFF5F5 0%, #FFE4E1 100%)', position: 'relative', overflow: 'hidden' }}>
       {/* Floating pixel art decorations */}
       {sprites.perro && (
-        <img src={sprites.perro} alt="" style={{ position: 'absolute', top: '8%', left: '5%', opacity: 0.4, animation: 'bounce 4s ease infinite', ...PIXEL_STYLE, width: '48px', height: '40px' }} />
+        <img src={sprites.perro} alt="" style={{ position: 'absolute', top: '8%', left: '5%', opacity: 0.4, animation: 'bounce 4s ease infinite', ...PIXEL_STYLE, width: '64px', height: '56px' }} />
       )}
       {sprites.gato && (
-        <img src={sprites.gato} alt="" style={{ position: 'absolute', top: '12%', right: '8%', opacity: 0.35, animation: 'bounce 3.5s ease infinite 0.5s', ...PIXEL_STYLE, width: '48px', height: '40px' }} />
+        <img src={sprites.gato} alt="" style={{ position: 'absolute', top: '12%', right: '8%', opacity: 0.35, animation: 'bounce 3.5s ease infinite 0.5s', ...PIXEL_STYLE, width: '64px', height: '56px' }} />
       )}
       {sprites.conejo && (
-        <img src={sprites.conejo} alt="" style={{ position: 'absolute', bottom: '15%', left: '8%', opacity: 0.35, animation: 'bounce 5s ease infinite 1s', ...PIXEL_STYLE, width: '48px', height: '40px' }} />
+        <img src={sprites.conejo} alt="" style={{ position: 'absolute', bottom: '15%', left: '8%', opacity: 0.35, animation: 'bounce 5s ease infinite 1s', ...PIXEL_STYLE, width: '64px', height: '56px' }} />
       )}
 
       {/* Main content */}
@@ -63,10 +48,12 @@ export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
         </p>
       </div>
 
-      {/* Paula character pixel art */}
-      <div style={{ margin: '20px 0', animation: 'bounce 2.2s ease infinite', zIndex: 2 }}>
-        {sprites.paula && (
-          <img src={sprites.paula} alt="Paula" style={{ ...PIXEL_STYLE, width: '80px', height: '80px', margin: '0 auto' }} />
+      {/* Paula character pixel art — larger */}
+      <div style={{ margin: '20px 0', animation: 'bounce 2.2s ease infinite', zIndex: 2, minHeight: '120px' }}>
+        {sprites.paula ? (
+          <img src={sprites.paula} alt="Paula" style={{ ...PIXEL_STYLE, width: '144px', height: '120px', margin: '0 auto' }} />
+        ) : (
+          <div style={{ width: '144px', height: '120px' }} />
         )}
       </div>
 

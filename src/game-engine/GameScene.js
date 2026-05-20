@@ -36,11 +36,11 @@ export class GameScene {
     const h = this.canvas.height;
 
     // Paula enters from left
-    this.paula = new Paula(-120, h * 0.22, { state: 'walk', scale: 5 });
+    this.paula = new Paula(-120, h * 0.35, { state: 'walk', scale: 6 });
 
     // Animal waits on the right, hurt
-    this.animal = new Animal(w * 0.55, h * 0.15, this.levelData.animal, {
-      state: 'hurt', injury: this.levelData.injury, scale: 5
+    this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
+      state: 'hurt', injury: this.levelData.injury, scale: 6
     });
 
     // Animate Paula walking in
