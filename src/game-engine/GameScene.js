@@ -43,6 +43,10 @@ export class GameScene {
     // Petting reward counter (level 1)
     this.petCount = 0;
 
+    // Progressive help timer (level 1)
+    this.levelTimer = 0;
+    this.helpStage = 0;
+
     // Tutorial
     this.tutorialHand = null;
 
@@ -179,7 +183,7 @@ export class GameScene {
     // Pass scene reference for particles, Paula, SFX access
     this.mechanic.scene = this;
     this.mechanic.onSuccess = () => this.onTreatmentSuccess();
-    this.mechanic.onFail = () => this.onTreatmentFail();
+    this.mechanic.onFail = (wrongWord) => this.onTreatmentFail(wrongWord);
 
     // Tutorial for first encounter of each mechanic
     this.setupTutorial(mechanicType);
@@ -477,6 +481,53 @@ export class GameScene {
     if (this.flashAlpha > 0) {
       this.flashAlpha -= dt * 1.5;
       if (this.flashAlpha < 0) this.flashAlpha = 0;
+    }
+
+    // Level 1 progressive help timer
+    if (this.levelData.id === 1 && (this.state === 'playing' || this.state === 'explore')) {
+      this.levelTimer += dt;
+
+      // Stage 1 (30s): Paula points to Pipo's paw
+      if (this.helpStage < 1 && this.levelTimer > 30) {
+        this.helpStage = 1;
+        if (this.animal) {
+          const pawX = this.animal.x + this.animal.width * 0.5;
+          const pawY = this.animal.y + this.animal.height * 0.8;
+          this.pointingTarget = { x: pawX, y: pawY };
+          this.pointingTimer = 4.0;
+          this.paula.setState('pointing');
+          speak('Mira, la pata de Pipo está lastimada. Necesita una venda', { rate: 0.75, pitch: 1.15 });
+        }
+      }
+
+      // Stage 2 (45s): Paula says which button
+      if (this.helpStage < 2 && this.levelTimer > 45) {
+        this.helpStage = 2;
+        speak('Toca la palabra VENDA para curar a Pipo', { rate: 0.7, pitch: 1.2 });
+        if (this.mechanic && this.mechanic.highlightCorrect) {
+          this.mechanic.highlightCorrect();
+        }
+      }
+
+      // Stage 3 (60s): Stronger highlight + Paula repeats
+      if (this.helpStage < 3 && this.levelTimer > 60) {
+        this.helpStage = 3;
+        speak('¡VENDA! Toca VENDA', { rate: 0.7, pitch: 1.25 });
+        if (this.mechanic && this.mechanic.highlightCorrect) {
+          this.mechanic.highlightCorrect();
+        }
+        // Auto-activate hint level 3
+        this.activateHint(3);
+      }
+
+      // Stage 4 (90s): Auto-complete with 1 star
+      if (this.helpStage < 4 && this.levelTimer > 90) {
+        this.helpStage = 4;
+        // Simulate correct answer
+        if (this.mechanic && this.mechanic.onSuccess) {
+          this.mechanic.onSuccess();
+        }
+      }
     }
 
     // Detect inactivity for hints
