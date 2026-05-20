@@ -1,8 +1,10 @@
 import { useMemo, useEffect, useState } from 'react';
 import { levels } from '../../data/levels-v2.js';
 import { getBiomeSpriteUrl, getIconSpriteUrl, getAnimalSpriteUrl } from '../../hooks/usePixelArt.js';
+import { useTTS } from '../../hooks/useTTS.js';
 
 export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
+  const { speak } = useTTS();
   const grouped = useMemo(() => {
     const g = {};
     levels.forEach(l => {
@@ -86,7 +88,12 @@ export default function MapScreen({ progress, blocks, onSelectLevel, onBack }) {
                 const animalUrl = spriteUrls[`animal_${level.animal}`];
 
                 return (
-                  <button key={level.id} onClick={() => unlocked && onSelectLevel(level.id)}
+                  <button key={level.id} onClick={() => {
+                      if (unlocked) {
+                        speak(`${level.title}. ${level.animal}`, { rate: 0.85 });
+                        onSelectLevel(level.id);
+                      }
+                    }}
                     disabled={!unlocked}
                     style={{
                       width: '60px', height: '60px', borderRadius: '16px', border: 'none',

@@ -1,8 +1,9 @@
 import { WordButton } from '../entities/WordButton.js';
 import { tween, pulse, shake } from '../../utils/tween.js';
+import { speak, speakSuccess, speakEncouragement, speakWord } from '../../utils/tts.js';
 
 /**
- * v2.0 — Tap Word mechanic with rich animations
+ * v2.1 — Tap Word mechanic with TTS on every tap
  * Words float, pulse on touch, fly to animal on correct
  */
 export class TapWordMechanic {
@@ -21,16 +22,19 @@ export class TapWordMechanic {
   createButtons() {
     const options = this.levelData.options;
     const correct = this.levelData.correct;
-    const btnWidth = 200;
-    const btnHeight = 90;
-    const spacing = 30;
+
+    // Responsive sizing: smaller on narrow screens
+    const isNarrow = this.w < 500;
+    const btnWidth = isNarrow ? Math.min(160, (this.w - 40) / options.length - 12) : 200;
+    const btnHeight = isNarrow ? 72 : 90;
+    const spacing = isNarrow ? 12 : 30;
     const totalWidth = options.length * btnWidth + (options.length - 1) * spacing;
     const startX = (this.w - totalWidth) / 2;
     const y = this.h * 0.62;
 
     this.buttons = options.map((word, i) => {
       const btn = new WordButton(startX + i * (btnWidth + spacing), y, word, word === correct, {
-        width: btnWidth, height: btnHeight, fontSize: 36,
+        width: btnWidth, height: btnHeight, fontSize: isNarrow ? 28 : 36,
         bgColor: '#FFFFFF', hoverColor: '#FFDac1',
         correctColor: '#B5EAD7', wrongColor: '#FF9AA2',
       });
@@ -90,6 +94,9 @@ export class TapWordMechanic {
     if (this.completed) return false;
     for (const btn of this.buttons) {
       if (btn.contains(x, y)) {
+        // Always speak the word first so the child hears it
+        speakWord(btn.text);
+
         if (btn.isCorrect) {
           this.onCorrect(btn);
         } else {
@@ -117,6 +124,7 @@ export class TapWordMechanic {
       onUpdate: (v) => { btn.x = v.x; btn.y = v.y; btn.scale = v.scale; },
       onComplete: () => {
         btn.visible = false;
+        speakSuccess(btn.text);
         if (this.onSuccess) this.onSuccess();
       },
     });
@@ -125,6 +133,11 @@ export class TapWordMechanic {
   onWrong(btn) {
     btn.setWrong();
     shake(btn, 12, 500);
+
+    // Speak encouragement after the word
+    setTimeout(() => {
+      speakEncouragement();
+    }, 400);
 
     // Return to normal after shake
     setTimeout(() => {

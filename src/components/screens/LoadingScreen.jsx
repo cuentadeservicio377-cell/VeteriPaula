@@ -83,16 +83,17 @@ export default function LoadingScreen({ nextBiome, onReady }) {
   }, [nextBiome]);
 
   useEffect(() => {
+    // Reduced from 80ms to 30ms interval → ~1.5s total instead of 4s
     const interval = setInterval(() => {
       setProgress(p => {
         if (p >= 100) {
           clearInterval(interval);
-          setTimeout(() => onReady(), 500);
+          setTimeout(() => onReady(), 300);
           return 100;
         }
         return p + 2;
       });
-    }, 80);
+    }, 30);
     return () => clearInterval(interval);
   }, [onReady]);
 

@@ -2,9 +2,10 @@ import { Draggable, DropSlot } from '../../utils/draggable.js';
 import { WordButton } from '../entities/WordButton.js';
 import { tween, pulse } from '../../utils/tween.js';
 import { createItemSprite, STEP_TO_SPRITE } from '../sprites/Items.js';
+import { speak, speakEncouragement } from '../../utils/tts.js';
 
 /**
- * v2.0 — Follow Steps with drag & drop pixel art objects
+ * v2.1 — Follow Steps with TTS on every interaction
  * Drag treatment items to the animal in order
  */
 export class FollowStepsMechanic {
@@ -78,6 +79,8 @@ export class FollowStepsMechanic {
       );
       obj.stepName = step;
       obj.isAvailable = i === 0;
+      // Hide future steps so they don't confuse the child
+      obj.visible = i === 0;
       this.stepObjects.push(obj);
 
       // Create pixel art item sprite for this step
@@ -108,6 +111,8 @@ export class FollowStepsMechanic {
       setTimeout(() => obj.reset(), 300);
       return false;
     }
+    // Speak the step name when picked up
+    speak(obj.stepName, { rate: 0.75, pitch: 1.1 });
   }
 
   onSnap(obj, slot) {
@@ -126,17 +131,26 @@ export class FollowStepsMechanic {
         onComplete: () => { obj.visible = false; }
       });
 
+      // Speak positive feedback for the step
+      speak('¡Bien!', { rate: 0.85, pitch: 1.2 });
+
       if (this.currentStep < this.stepObjects.length) {
         const nextObj = this.stepObjects[this.currentStep];
         nextObj.isAvailable = true;
+        nextObj.visible = true;
+        // Speak what's next after a short delay
+        setTimeout(() => {
+          speak(`Ahora: ${nextObj.stepName}`, { rate: 0.75, pitch: 1.1 });
+        }, 600);
         pulse(nextObj, 0.15, 600);
       }
 
       if (this.currentStep >= this.levelData.steps.length) {
         this.completed = true;
+        // Reduced from 1000ms to 600ms
         setTimeout(() => {
           if (this.onSuccess) this.onSuccess();
-        }, 1000);
+        }, 600);
       }
     } else {
       obj.setWrong();
@@ -145,6 +159,8 @@ export class FollowStepsMechanic {
         if (drag) drag.returnToStart();
         obj.reset();
       }, 400);
+
+      speakEncouragement();
       if (this.onFail) this.onFail();
     }
   }
@@ -192,13 +208,10 @@ export class FollowStepsMechanic {
     // Drop zone
     this.animalZone.render(ctx);
 
-    // Step objects
+    // Step objects — only render visible ones
     this.stepObjects.forEach((obj, i) => {
-      if (!obj.isAvailable && !obj.confirmed) {
-        ctx.globalAlpha = 0.4;
-      }
+      if (!obj.visible) return;
       obj.render(ctx);
-      ctx.globalAlpha = 1;
 
       // Pixel art item icon on the button
       const sprite = this.itemSprites[i];

@@ -7,9 +7,10 @@ import { ParticleSystem } from '../utils/particles.js';
 import { tween, float } from '../utils/tween.js';
 import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decorations.js';
 import { createItemSprite } from './sprites/Items.js';
+import { speak, stopTTS, speakEncouragement } from '../utils/tts.js';
 
 /**
- * v2.0 Game Scene — Rich animations, particles, tweening, anti-frustration
+ * v2.1 Game Scene — Rich animations, TTS on every interaction, reduced dead time
  */
 export class GameScene {
   constructor(canvas, levelData) {
@@ -25,6 +26,7 @@ export class GameScene {
     this.onComplete = null;
     this.onFail = null;
     this.floatAnim = null;
+    this.timers = [];
 
     this.decorations = [];
     this.soundSprite = null;
@@ -115,19 +117,11 @@ export class GameScene {
     this.mechanic.onSuccess = () => this.onTreatmentSuccess();
     this.mechanic.onFail = () => this.onTreatmentFail();
 
-    // Read instruction aloud
-    this.speakText(this.levelData.instruction);
-  }
-
-  speakText(text) {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.7;
-      utterance.pitch = 1.15;
-      window.speechSynthesis.speak(utterance);
-    }
+    // Read instruction aloud after a short delay so Paula is settled
+    const t = setTimeout(() => {
+      speak(this.levelData.instruction, { rate: 0.75 });
+    }, 600);
+    this.timers.push(t);
   }
 
   onTreatmentSuccess() {
@@ -160,25 +154,31 @@ export class GameScene {
       },
     });
 
-    // Speak celebration
-    setTimeout(() => {
-      this.speakText(this.levelData.celebration);
-    }, 500);
+    // Speak celebration with slight delay
+    const t1 = setTimeout(() => {
+      speak(this.levelData.celebration, { rate: 0.85, pitch: 1.15 });
+    }, 400);
+    this.timers.push(t1);
 
-    setTimeout(() => {
+    // Move to celebrate state sooner — reduced from 2500ms to 1500ms
+    const t2 = setTimeout(() => {
       this.state = 'celebrate';
       if (this.onComplete) this.onComplete();
-    }, 2500);
+    }, 1500);
+    this.timers.push(t2);
   }
 
   onTreatmentFail() {
-    // Anti-frustration: Paula encourages
+    // Anti-frustration: Paula encourages with TTS
     this.paula.setState('worried');
 
+    speakEncouragement();
+
     // Gentle hint
-    setTimeout(() => {
+    const t = setTimeout(() => {
       this.paula.setState('idle');
     }, 800);
+    this.timers.push(t);
   }
 
   update(dt) {
@@ -297,7 +297,7 @@ export class GameScene {
   handleTouch(x, y) {
     // Sound button
     if (x > this.canvas.width - 65 && x < this.canvas.width - 10 && y > 10 && y < 58) {
-      this.speakText(this.levelData.instruction);
+      speak(this.levelData.instruction, { rate: 0.75 });
       return true;
     }
 
@@ -331,6 +331,9 @@ export class GameScene {
   }
 
   destroy() {
+    stopTTS();
+    this.timers.forEach(t => clearTimeout(t));
+    this.timers = [];
     if (this.floatAnim) this.floatAnim.stop();
     if (this.mechanic) {
       // Cleanup any ongoing tweens

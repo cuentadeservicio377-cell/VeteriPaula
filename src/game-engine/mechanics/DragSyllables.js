@@ -2,9 +2,10 @@ import { WordButton } from '../entities/WordButton.js';
 import { Draggable, DropSlot } from '../../utils/draggable.js';
 import { tween } from '../../utils/tween.js';
 import { shuffle } from '../../utils/shuffle.js';
+import { speak, speakSyllable, speakWord, speakSuccess, speakEncouragement } from '../../utils/tts.js';
 
 /**
- * v2.0 — Drag & Drop Syllables mechanic
+ * v2.1 — Drag & Drop Syllables mechanic with TTS on every interaction
  * Syllables are draggable blocks that snap to slots with magnetism
  */
 export class DragSyllablesMechanic {
@@ -38,7 +39,7 @@ export class DragSyllablesMechanic {
     for (let i = 0; i < slotsCount; i++) {
       this.slots.push(new DropSlot(
         slotsStartX + i * (slotWidth + slotSpacing),
-        slotsY, slotWidth, slotHeight, i, `${i + 1}º`
+        slotsY, slotWidth, slotHeight, i, `${i + 1}`  // Simple number, no ordinal symbol
       ));
     }
 
@@ -85,7 +86,8 @@ export class DragSyllablesMechanic {
   }
 
   onDragStart(block) {
-    // Play drag sound effect
+    // Speak the syllable as the child picks it up
+    speakSyllable(block.syllable);
     block.zIndex = 100;
   }
 
@@ -98,15 +100,23 @@ export class DragSyllablesMechanic {
       block.setCorrect();
       this.building.push(block.syllable);
 
+      // Speak the syllable with positive tone
+      speak(block.syllable, { rate: 0.75, pitch: 1.2 });
+
       // Check if word is complete
       const built = this.building.join('');
       if (built === this.levelData.target) {
         this.completed = true;
         // Animate word becoming alive
         this.animateWordComplete();
+        // Speak the full word
+        setTimeout(() => {
+          speakSuccess(this.levelData.target);
+        }, 300);
+        // Reduced from 1200ms to 600ms
         setTimeout(() => {
           if (this.onSuccess) this.onSuccess();
-        }, 1200);
+        }, 600);
       }
     } else {
       // Wrong slot — return to start
@@ -117,6 +127,7 @@ export class DragSyllablesMechanic {
         block.reset();
       }, 400);
 
+      speakEncouragement();
       if (this.onFail) this.onFail();
     }
   }

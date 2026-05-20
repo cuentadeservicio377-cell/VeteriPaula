@@ -2,6 +2,8 @@
  * Drag & drop system for Canvas entities with snap-to-slot support
  */
 
+import { tween } from './tween.js';
+
 export class Draggable {
   constructor(entity, options = {}) {
     this.entity = entity;
@@ -103,16 +105,15 @@ export class Draggable {
     const startX = this.startX;
     const startY = this.startY;
     const entity = this.entity;
-    const animateReturn = () => {
-      const dx = startX - entity.x;
-      const dy = startY - entity.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 2) { entity.x = startX; entity.y = startY; entity.scale = 1; return; }
-      entity.x += dx * 0.15; entity.y += dy * 0.15;
-      entity.scale = 1 + Math.sin(performance.now() * 0.01) * 0.05;
-      requestAnimationFrame(animateReturn);
-    };
-    requestAnimationFrame(animateReturn);
+    // Use time-based tween instead of frame-dependent lerp
+    tween({
+      from: { x: entity.x, y: entity.y },
+      to: { x: startX, y: startY },
+      duration: 350,
+      ease: 'easeOutBack',
+      onUpdate: (v) => { entity.x = v.x; entity.y = v.y; },
+      onComplete: () => { entity.scale = 1; },
+    });
   }
 
   reset() {

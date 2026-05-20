@@ -1,12 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { GameLoop } from '../../game-engine/GameLoop.js';
 import { GameScene } from '../../game-engine/GameScene.js';
+import { useTTS } from '../../hooks/useTTS.js';
+import { stopTTS } from '../../utils/tts.js';
 
 export default function GameCanvas({ levelData, onComplete, onFail }) {
   const canvasRef = useRef(null);
   const gameLoopRef = useRef(null);
   const sceneRef = useRef(null);
   const isDraggingRef = useRef(false);
+  // Register TTS globally for Canvas engine
+  useTTS();
 
   const handleComplete = useCallback(() => {
     if (gameLoopRef.current) gameLoopRef.current.stop();
@@ -32,11 +36,10 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
 
     const getPos = (e) => {
       const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
       return {
-        x: (clientX - rect.left) * (canvas.width / rect.width),
-        y: (clientY - rect.top) * (canvas.height / rect.height)
+        x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+        y: (touch.clientY - rect.top) * (canvas.height / rect.height)
       };
     };
 
@@ -83,6 +86,7 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     canvas.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      stopTTS();
       loop.destroy();
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);

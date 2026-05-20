@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getProgress } from '../../utils/storage.js';
 import { getAnimalSpriteUrl } from '../../hooks/usePixelArt.js';
+import { useTTS } from '../../hooks/useTTS.js';
 import { spriteToDataURL } from '../../utils/spriteToImage.js';
 import { PAULA_PIXEL_DEFS } from '../../game-engine/sprites/Characters.js';
 import { ICON_SPRITES } from '../../game-engine/sprites/UI.js';
@@ -10,8 +11,17 @@ const PIXEL_STYLE = { imageRendering: 'pixelated', display: 'block' };
 export default function HomeScreen({ onPlay, onSelectLevel, onReset }) {
   const [progress, setProgress] = useState(null);
   const [sprites, setSprites] = useState({});
+  const { speak } = useTTS();
 
   useEffect(() => { setProgress(getProgress()); }, []);
+
+  useEffect(() => {
+    // Welcome TTS after a short delay so the page feels alive
+    const t = setTimeout(() => {
+      speak('¡Hola! Soy Paula. Vamos a curar animales juntos.', { rate: 0.85, pitch: 1.15 });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [speak]);
 
   useEffect(() => {
     const urls = {};
