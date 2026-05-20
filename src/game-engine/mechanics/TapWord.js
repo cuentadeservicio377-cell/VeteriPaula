@@ -106,20 +106,19 @@ export class TapWordMechanic {
     if (this.flyingItem && this.flyingItem.sprite) {
       ctx.save();
       ctx.globalAlpha = this.flyingItem.alpha || 1;
-      // Debug glow around flying item
+      // Highlight circle behind item
+      const cx = this.flyingItem.sprite.x + (this.flyingItem.sprite.width * this.flyingItem.sprite.scale) / 2;
+      const cy = this.flyingItem.sprite.y + (this.flyingItem.sprite.height * this.flyingItem.sprite.scale) / 2;
+      const r = Math.max(this.flyingItem.sprite.width, this.flyingItem.sprite.height) * this.flyingItem.sprite.scale * 0.7;
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.25)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      // Glow
       ctx.shadowColor = '#FFD700';
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 15;
       this.flyingItem.sprite.render(ctx);
       ctx.shadowBlur = 0;
-      // Debug: red box around flying item
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(
-        this.flyingItem.sprite.x - 5,
-        this.flyingItem.sprite.y - 5,
-        this.flyingItem.sprite.width * this.flyingItem.sprite.scale + 10,
-        this.flyingItem.sprite.height * this.flyingItem.sprite.scale + 10
-      );
       ctx.restore();
     }
 
@@ -173,7 +172,7 @@ export class TapWordMechanic {
         const spriteType = STEP_TO_SPRITE[btn.word.toUpperCase()];
         if (spriteType && animal) {
           this.flyingItem = {
-            sprite: createItemSprite(spriteType, targetX, targetY, 5),
+            sprite: createItemSprite(spriteType, targetX, targetY, 8),
             timer: 2.0,
             phase: 'stick',
             alpha: 1,
@@ -184,8 +183,8 @@ export class TapWordMechanic {
             this.flyingItem.sprite.scale = 0;
             tween({
               from: { s: 0 },
-              to: { s: 3 },
-              duration: 300,
+              to: { s: 8 },
+              duration: 250,
               ease: 'easeOutBack',
               onUpdate: (v) => {
                 if (this.flyingItem && this.flyingItem.sprite) {
