@@ -43,7 +43,12 @@ export class Animal extends Entity {
   }
 
   update(dt) {
-    if (this.sprite) this.sprite.update(dt);
+    if (this.sprite) {
+      // Sync sprite position with Entity position
+      this.sprite.x = this.x;
+      this.sprite.y = this.y;
+      this.sprite.update(dt);
+    }
 
     // Head shake animation
     if (this.headShakeTimer > 0) {
