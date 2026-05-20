@@ -1,0 +1,235 @@
+import { Draggable, DropSlot } from '../../utils/draggable.js';
+import { WordButton } from '../entities/WordButton.js';
+import { tween, pulse } from '../../utils/tween.js';
+
+/**
+ * v2.0 — Follow Steps with drag & drop objects
+ * Drag objects (water, bandage, etc.) to the animal in order
+ */
+export class FollowStepsMechanic {
+  constructor(levelData, canvasWidth, canvasHeight) {
+    this.levelData = levelData;
+    this.w = canvasWidth;
+    this.h = canvasHeight;
+    this.stepObjects = [];
+    this.slots = [];
+    this.draggables = [];
+    this.currentStep = 0;
+    this.completed = false;
+    this.onSuccess = null;
+    this.onFail = null;
+    this.createElements();
+  }
+
+  createElements() {
+    const steps = this.levelData.steps || [];
+    const emojis = this.levelData.stepEmojis || [];
+
+    // Create one drop zone near the animal
+    this.animalZone = {
+      x: this.w * 0.55,
+      y: this.h * 0.20,
+      width: 140,
+      height: 120,
+      id: 'animal',
+      occupied: false,
+      highlighted: false,
+      render(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.highlighted ? 0.4 : 0.2;
+        ctx.fillStyle = this.highlighted ? '#B5EAD7' : '#E0E0E0';
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = this.highlighted ? '#4CAF50' : '#CCCCCC';
+        ctx.lineWidth = this.highlighted ? 4 : 2;
+        ctx.setLineDash([8, 4]);
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    };
+    this.slots = [this.animalZone];
+
+    // Create draggable step objects
+    const objWidth = 100;
+    const objHeight = 80;
+    const spacing = 20;
+    const totalWidth = steps.length * objWidth + (steps.length - 1) * spacing;
+    const startX = (this.w - totalWidth) / 2;
+    const y = this.h * 0.68;
+
+    this.stepObjects = [];
+    this.draggables = [];
+
+    steps.forEach((step, i) => {
+      const obj = new WordButton(
+        startX + i * (objWidth + spacing),
+        y, step, false, {
+          width: objWidth, height: objHeight, fontSize: 18,
+          bgColor: '#FFFFFF', hoverColor: '#FFDac1',
+          correctColor: '#B5EAD7', wrongColor: '#FF9AA2',
+          borderRadius: 16,
+        }
+      );
+      obj.stepName = step;
+      obj.stepEmoji = emojis[i] || '';
+      obj.isAvailable = i === 0; // Only first step is available initially
+      this.stepObjects.push(obj);
+
+      const drag = new Draggable(obj, {
+        slots: this.slots,
+        magnetDistance: 80,
+        dragScale: 1.15,
+        onDragStart: () => this.onDragStart(obj),
+        onSnap: (entity, slot) => this.onSnap(obj, slot),
+        onRelease: () => this.onRelease(obj),
+      });
+      this.draggables.push(drag);
+    });
+  }
+
+  onDragStart(obj) {
+    if (!obj.isAvailable) {
+      // Shake to indicate not available yet
+      obj.setWrong();
+      setTimeout(() => obj.reset(), 300);
+      return false;
+    }
+  }
+
+  onSnap(obj, slot) {
+    const expectedStep = this.levelData.steps[this.currentStep];
+    if (obj.stepName === expectedStep) {
+      obj.setCorrect();
+      obj.isAvailable = false;
+      this.currentStep++;
+
+      // Animate the object becoming part of the animal
+      tween({
+        from: { scale: 1 },
+        to: { scale: 0.5 },
+        duration: 400,
+        ease: 'easeOut',
+        onUpdate: (v) => { obj.scale = v.scale; },
+        onComplete: () => { obj.visible = false; }
+      });
+
+      // Unlock next step
+      if (this.currentStep < this.stepObjects.length) {
+        const nextObj = this.stepObjects[this.currentStep];
+        nextObj.isAvailable = true;
+        pulse(nextObj, 0.15, 600);
+      }
+
+      // Check completion
+      if (this.currentStep >= this.levelData.steps.length) {
+        this.completed = true;
+        setTimeout(() => {
+          if (this.onSuccess) this.onSuccess();
+        }, 1000);
+      }
+    } else {
+      obj.setWrong();
+      setTimeout(() => {
+        const drag = this.draggables.find(d => d.entity === obj);
+        if (drag) drag.returnToStart();
+        obj.reset();
+      }, 400);
+      if (this.onFail) this.onFail();
+    }
+  }
+
+  onRelease(obj) {
+    // Reset availability check
+  }
+
+  update(dt) {
+    this.stepObjects.forEach(obj => obj.update(dt));
+  }
+
+  render(ctx) {
+    // Question
+    ctx.fillStyle = '#5D4037';
+    ctx.font = "bold 24px 'Nunito', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.fillText(this.levelData.instruction, this.w / 2, this.h * 0.18);
+
+    // Current step indicator
+    if (!this.completed) {
+      ctx.fillStyle = '#8D6E63';
+      ctx.font = "bold 20px 'Nunito', sans-serif";
+      const stepName = this.levelData.steps[this.currentStep];
+      const stepEmoji = this.levelData.stepEmojis?.[this.currentStep] || '';
+      ctx.fillText(`Paso ${this.currentStep + 1}: ${stepEmoji} ${stepName}`, this.w / 2, this.h * 0.28);
+    }
+
+    // Drop zone
+    this.animalZone.render(ctx);
+
+    // Step objects
+    this.stepObjects.forEach((obj, i) => {
+      if (!obj.isAvailable && !obj.confirmed) {
+        ctx.globalAlpha = 0.4;
+      }
+      obj.render(ctx);
+      ctx.globalAlpha = 1;
+
+      // Emoji below
+      if (obj.stepEmoji && obj.visible) {
+        ctx.font = '24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(obj.stepEmoji, obj.x + obj.width / 2, obj.y + obj.height + 20);
+      }
+    });
+
+    // Progress
+    if (!this.completed) {
+      ctx.fillStyle = '#BCAAA4';
+      ctx.font = "16px 'Nunito', sans-serif";
+      ctx.fillText(`Paso ${this.currentStep + 1} de ${this.levelData.steps.length}`, this.w / 2, this.h * 0.90);
+    }
+  }
+
+  handleTouch(x, y) {
+    if (this.completed) return false;
+    for (const drag of this.draggables) {
+      if (drag.entity.isAvailable && drag.startDrag(x, y)) return true;
+    }
+    // Check if touching unavailable object
+    for (const drag of this.draggables) {
+      if (!drag.entity.isAvailable && drag.entity.contains(x, y)) {
+        // Show "wait" feedback
+        return true;
+      }
+    }
+    return false;
+  }
+
+  handleTouchMove(x, y) {
+    for (const drag of this.draggables) {
+      if (drag.isDragging) drag.moveDrag(x, y);
+    }
+  }
+
+  handleTouchEnd() {
+    for (const drag of this.draggables) {
+      drag.endDrag();
+    }
+  }
+
+  handleMouseMove(x, y) {
+    this.stepObjects.forEach(obj => {
+      if (obj.isAvailable) {
+        obj.hovered = obj.contains(x, y);
+      }
+    });
+  }
+
+  resize(canvasWidth, canvasHeight) {
+    this.w = canvasWidth; this.h = canvasHeight;
+    this.createElements();
+  }
+}

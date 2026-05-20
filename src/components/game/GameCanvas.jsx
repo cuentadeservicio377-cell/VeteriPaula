@@ -2,19 +2,14 @@ import { useEffect, useRef, useCallback } from 'react';
 import { GameLoop } from '../../game-engine/GameLoop.js';
 import { GameScene } from '../../game-engine/GameScene.js';
 
-/**
- * React wrapper for the Canvas game engine
- */
 export default function GameCanvas({ levelData, onComplete, onFail }) {
   const canvasRef = useRef(null);
   const gameLoopRef = useRef(null);
   const sceneRef = useRef(null);
-  const isTouchingRef = useRef(false);
+  const isDraggingRef = useRef(false);
 
   const handleComplete = useCallback(() => {
-    if (gameLoopRef.current) {
-      gameLoopRef.current.stop();
-    }
+    if (gameLoopRef.current) gameLoopRef.current.stop();
     if (onComplete) onComplete();
   }, [onComplete]);
 
@@ -22,13 +17,11 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Create game scene
     const scene = new GameScene(canvas, levelData);
     scene.onComplete = handleComplete;
     scene.onFail = onFail;
     sceneRef.current = scene;
 
-    // Create game loop
     const loop = new GameLoop(
       canvas,
       (dt) => scene.update(dt),
@@ -37,7 +30,6 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     gameLoopRef.current = loop;
     loop.start();
 
-    // Touch/Mouse handlers
     const getPos = (e) => {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -50,20 +42,22 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
 
     const handleTouchStart = (e) => {
       e.preventDefault();
-      isTouchingRef.current = true;
+      isDraggingRef.current = true;
       const pos = getPos(e);
       scene.handleTouch(pos.x, pos.y);
     };
 
     const handleTouchMove = (e) => {
       e.preventDefault();
-      if (!isTouchingRef.current) return;
+      if (!isDraggingRef.current) return;
       const pos = getPos(e);
-      scene.handleMouseMove(pos.x, pos.y);
+      scene.handleTouchMove(pos.x, pos.y);
     };
 
-    const handleTouchEnd = () => {
-      isTouchingRef.current = false;
+    const handleTouchEnd = (e) => {
+      e.preventDefault();
+      isDraggingRef.current = false;
+      scene.handleTouchEnd();
     };
 
     const handleMouseMove = (e) => {
@@ -71,24 +65,32 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
       scene.handleMouseMove(pos.x, pos.y);
     };
 
-    const handleClick = (e) => {
+    const handleMouseDown = (e) => {
       const pos = getPos(e);
       scene.handleTouch(pos.x, pos.y);
     };
 
+    const handleMouseUp = () => {
+      scene.handleTouchEnd();
+    };
+
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
     canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
 
     return () => {
       loop.destroy();
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchcancel', handleTouchEnd);
       canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mouseup', handleMouseUp);
     };
   }, [levelData, handleComplete, onFail]);
 
@@ -96,13 +98,7 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     <canvas
       ref={canvasRef}
       className="game-canvas"
-      style={{
-        display: 'block',
-        width: '100%',
-        height: '100%',
-        touchAction: 'none',
-        cursor: 'pointer'
-      }}
+      style={{ display: 'block', width: '100%', height: '100%', touchAction: 'none', cursor: 'pointer' }}
     />
   );
 }

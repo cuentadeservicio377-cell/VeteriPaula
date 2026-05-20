@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getProgress, completeLevel, resetProgress } from './utils/storage.js';
-import { getLevel, getTotalLevels } from './data/levels.js';
+import { getLevel, getTotalLevels, getBlocks, getBlockForLevel } from './data/levels-v2.js';
 import { getCharacterForLevel } from './data/characters.js';
 import HomeScreen from './components/screens/HomeScreen.jsx';
 import MapScreen from './components/screens/MapScreen.jsx';
@@ -8,25 +8,22 @@ import LoadingScreen from './components/screens/LoadingScreen.jsx';
 import CelebrationScreen from './components/screens/CelebrationScreen.jsx';
 import GameCanvas from './components/game/GameCanvas.jsx';
 
-/**
- * Main App with state-based routing
- */
 function App() {
   const [screen, setScreen] = useState('home');
   const [currentLevel, setCurrentLevel] = useState(1);
   const [progress, setProgress] = useState(getProgress());
   const [levelData, setLevelData] = useState(null);
-  const [nextBiome, setNextBiome] = useState('home');
+  const [nextBiome, setNextBiome] = useState('clinica');
 
   const startGame = useCallback((levelId) => {
     const data = getLevel(levelId);
     if (!data) return;
-    
+    const block = getBlockForLevel(levelId);
     const enrichedData = {
       ...data,
-      character: getCharacterForLevel(levelId)
+      character: getCharacterForLevel(levelId),
+      blockColor: block?.color || '#FF6B6B',
     };
-    
     setCurrentLevel(levelId);
     setLevelData(enrichedData);
     setNextBiome(data.biome);
@@ -34,11 +31,8 @@ function App() {
   }, []);
 
   const handlePlay = useCallback(() => {
-    // Show loading screen with vocab before first level
     const data = getLevel(progress.currentLevel);
-    if (data) {
-      setNextBiome(data.biome);
-    }
+    if (data) setNextBiome(data.biome);
     setScreen('loading');
   }, [progress.currentLevel]);
 
@@ -57,16 +51,10 @@ function App() {
     if (nextLevel > getTotalLevels()) {
       setScreen('home');
     } else {
-      // Show loading with vocab for next level's biome
       const nextData = getLevel(nextLevel);
-      if (nextData) {
-        setNextBiome(nextData.biome);
-      }
+      if (nextData) setNextBiome(nextData.biome);
       setScreen('loading');
-      // We'll start the next level after loading
-      setTimeout(() => {
-        startGame(nextLevel);
-      }, 100);
+      setTimeout(() => startGame(nextLevel), 100);
     }
   }, [currentLevel, startGame]);
 
@@ -76,78 +64,24 @@ function App() {
     setScreen('home');
   }, []);
 
-  // Render current screen
   switch (screen) {
     case 'home':
-      return (
-        <HomeScreen
-          onPlay={handlePlay}
-          onSelectLevel={() => setScreen('map')}
-          onReset={handleReset}
-        />
-      );
-
+      return <HomeScreen onPlay={handlePlay} onSelectLevel={() => setScreen('map')} onReset={handleReset} />;
     case 'map':
-      return (
-        <MapScreen
-          progress={progress}
-          onSelectLevel={(levelId) => {
-            const data = getLevel(levelId);
-            if (data) setNextBiome(data.biome);
-            setScreen('loading');
-            setTimeout(() => startGame(levelId), 100);
-          }}
-          onBack={() => setScreen('home')}
-        />
-      );
-
+      return <MapScreen progress={progress} blocks={getBlocks()} onSelectLevel={(id) => { setScreen('loading'); setTimeout(() => startGame(id), 100); }} onBack={() => setScreen('home')} />;
     case 'loading':
-      return (
-        <LoadingScreen
-          nextBiome={nextBiome}
-          onReady={handleLoadingReady}
-        />
-      );
-
+      return <LoadingScreen nextBiome={nextBiome} onReady={handleLoadingReady} />;
     case 'game':
       if (!levelData) return null;
       return (
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-          <GameCanvas
-            levelData={levelData}
-            onComplete={handleLevelComplete}
-            onFail={() => {}}
-          />
-          <button
-            onClick={() => setScreen('home')}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              background: 'rgba(255,255,255,0.9)',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '8px 16px',
-              fontSize: '1rem',
-              cursor: 'pointer',
-              zIndex: 10
-            }}
-          >
-            🏠
-          </button>
+          <GameCanvas levelData={levelData} onComplete={handleLevelComplete} onFail={() => {}} />
+          <button onClick={() => setScreen('home')} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '12px', padding: '8px 16px', fontSize: '1rem', cursor: 'pointer', zIndex: 10 }}>🏠</button>
         </div>
       );
-
     case 'celebration':
       if (!levelData) return null;
-      return (
-        <CelebrationScreen
-          levelData={levelData}
-          onNext={handleNextLevel}
-          onHome={() => setScreen('home')}
-        />
-      );
-
+      return <CelebrationScreen levelData={levelData} onNext={handleNextLevel} onHome={() => setScreen('home')} />;
     default:
       return <HomeScreen onPlay={handlePlay} onSelectLevel={() => setScreen('map')} onReset={handleReset} />;
   }

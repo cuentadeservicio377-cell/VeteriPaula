@@ -1,93 +1,88 @@
 import { Animal } from './entities/Animal.js';
 import { Paula } from './entities/Paula.js';
-import { ChooseWordMechanic } from './mechanics/ChooseWord.js';
-import { BuildSyllablesMechanic } from './mechanics/BuildSyllables.js';
-import { FollowInstructionsMechanic } from './mechanics/FollowInstructions.js';
+import { TapWordMechanic } from './mechanics/TapWord.js';
+import { DragSyllablesMechanic } from './mechanics/DragSyllables.js';
+import { FollowStepsMechanic } from './mechanics/FollowSteps.js';
+import { ParticleSystem } from '../utils/particles.js';
+import { tween, float } from '../utils/tween.js';
 
 /**
- * Main game scene that manages a single level
+ * v2.0 Game Scene — Rich animations, particles, tweening, anti-frustration
  */
 export class GameScene {
   constructor(canvas, levelData) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.levelData = levelData;
-    
-    this.state = 'discovering'; // discovering, diagnosing, treating, healing, celebrating
+    this.state = 'intro'; // intro, playing, success, celebrate
     this.stateTimer = 0;
-    
     this.paula = null;
     this.animal = null;
     this.mechanic = null;
-    this.particles = [];
-    
+    this.particles = new ParticleSystem();
     this.onComplete = null;
     this.onFail = null;
-    
+    this.floatAnim = null;
+
     this.setupScene();
   }
 
   setupScene() {
     const w = this.canvas.width;
     const h = this.canvas.height;
-    
-    // Create Paula
-    this.paula = new Paula(w * 0.15, h * 0.25, {
-      state: 'idle',
-      size: 90
+
+    // Paula enters from left
+    this.paula = new Paula(-120, h * 0.22, { state: 'walk', size: 100 });
+
+    // Animal waits on the right, hurt
+    this.animal = new Animal(w * 0.55, h * 0.15, this.levelData.animal, {
+      state: 'hurt', injury: this.levelData.injury, size: 110
     });
-    
-    // Create animal
-    this.animal = new Animal(w * 0.6, h * 0.15, this.levelData.animal, {
-      state: 'hurt',
-      injury: this.levelData.injury,
-      size: 110
-    });
-    
+
     // Animate Paula walking in
-    setTimeout(() => {
-      this.paula.walkTo(this.canvas.width * 0.35, 1500);
-    }, 500);
-    
-    // Transition to treating after discovery animation
-    setTimeout(() => {
-      this.state = 'treating';
-      this.createMechanic();
-    }, 2500);
+    tween({
+      from: { x: -120 },
+      to: { x: w * 0.12 },
+      duration: 1200,
+      ease: 'easeOutBack',
+      onUpdate: (v) => { this.paula.x = v.x; },
+      onComplete: () => {
+        this.paula.setState('worried');
+        this.state = 'playing';
+        this.createMechanic();
+      },
+    });
+
+    // Start floating animation for animal
+    this.floatAnim = float(this.animal, 4, 1.5);
   }
 
   createMechanic() {
     const w = this.canvas.width;
     const h = this.canvas.height;
-    
-    switch (this.levelData.mechanic) {
-      case 'choose_word':
-        this.mechanic = new ChooseWordMechanic(this.levelData, w, h);
+    const mechanicType = this.levelData.mechanic;
+
+    switch (mechanicType) {
+      case 'tap_word':
+        this.mechanic = new TapWordMechanic(this.levelData, w, h);
         break;
-      case 'build_syllables':
-        this.mechanic = new BuildSyllablesMechanic(this.levelData, w, h);
+      case 'drag_syllables':
+      case 'read_sentence_drag':
+        this.mechanic = new DragSyllablesMechanic(this.levelData, w, h);
         break;
-      case 'follow_instructions':
-        this.mechanic = new FollowInstructionsMechanic(this.levelData, w, h);
-        break;
-      case 'combined':
-        if (this.levelData.subMechanic === 'choose_word') {
-          this.mechanic = new ChooseWordMechanic(this.levelData, w, h);
-        } else if (this.levelData.subMechanic === 'build_syllables') {
-          this.mechanic = new BuildSyllablesMechanic(this.levelData, w, h);
-        } else {
-          this.mechanic = new FollowInstructionsMechanic(this.levelData, w, h);
-        }
+      case 'follow_steps':
+      case 'follow_steps_drag':
+        this.mechanic = new FollowStepsMechanic(this.levelData, w, h);
         break;
       default:
-        this.mechanic = new ChooseWordMechanic(this.levelData, w, h);
+        this.mechanic = new TapWordMechanic(this.levelData, w, h);
     }
-    
+
     this.mechanic.onSuccess = () => this.onTreatmentSuccess();
     this.mechanic.onFail = () => this.onTreatmentFail();
-    
-    // Read the question aloud
-    this.speakText(this.levelData.question);
+
+    // Read instruction aloud
+    this.speakText(this.levelData.instruction);
   }
 
   speakText(text) {
@@ -95,253 +90,224 @@ export class GameScene {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
-      utterance.rate = 0.75;
-      utterance.pitch = 1.1;
+      utterance.rate = 0.7;
+      utterance.pitch = 1.15;
       window.speechSynthesis.speak(utterance);
     }
   }
 
+  onTreatmentSuccess() {
+    this.state = 'success';
+    this.paula.setState('celebrate');
+    this.animal.heal();
+
+    // Rich celebration
+    const cx = this.animal.centerX();
+    const cy = this.animal.y;
+    this.particles.spawnConfetti(cx, cy, 50);
+    this.particles.spawnHearts(cx, cy - 30, 15);
+    this.particles.spawnStars(cx, cy - 50, 20);
+
+    // Paula jumps
+    tween({
+      from: { y: this.paula.y },
+      to: { y: this.paula.y - 40 },
+      duration: 300,
+      ease: 'easeOut',
+      onUpdate: (v) => { this.paula.y = v.y; },
+      onComplete: () => {
+        tween({
+          from: { y: this.paula.y },
+          to: { y: this.paula.y + 40 },
+          duration: 400,
+          ease: 'easeOutBounce',
+          onUpdate: (v) => { this.paula.y = v.y; },
+        });
+      },
+    });
+
+    // Speak celebration
+    setTimeout(() => {
+      this.speakText(this.levelData.celebration);
+    }, 500);
+
+    setTimeout(() => {
+      this.state = 'celebrate';
+      if (this.onComplete) this.onComplete();
+    }, 2500);
+  }
+
+  onTreatmentFail() {
+    // Anti-frustration: Paula encourages
+    this.paula.setState('worried');
+
+    // Gentle hint
+    setTimeout(() => {
+      this.paula.setState('idle');
+    }, 800);
+  }
+
   update(dt) {
     this.stateTimer += dt;
-    
-    if (this.paula) {
-      this.paula.update(dt);
-    }
-    
-    if (this.animal) {
-      this.animal.update(dt);
-    }
-    
-    if (this.mechanic && this.state === 'treating') {
-      this.mechanic.update(dt);
-    }
-    
-    // Update particles
-    this.particles = this.particles.filter(p => p.life > 0);
-    this.particles.forEach(p => {
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += 100 * dt;
-      p.life -= dt;
-      p.opacity = Math.max(0, p.life / p.maxLife);
-    });
+    if (this.paula) this.paula.update(dt);
+    if (this.animal) this.animal.update(dt);
+    if (this.mechanic && this.state === 'playing') this.mechanic.update(dt);
+    this.particles.update(dt);
   }
 
   render(ctx, width, height) {
-    // Background
     this.renderBackground(ctx, width, height);
-    
-    // Paula
-    if (this.paula) {
-      this.paula.render(ctx);
+    if (this.paula) this.paula.render(ctx);
+    if (this.animal) this.animal.render(ctx);
+    this.particles.render(ctx);
+    if (this.mechanic && this.state === 'playing') this.mechanic.render(ctx);
+
+    // Level badge
+    this.renderLevelBadge(ctx);
+
+    // Sound button
+    this.renderSoundButton(ctx, width);
+  }
+
+  renderBackground(ctx, w, h) {
+    const palettes = {
+      clinica: { top: '#FFF5F5', bottom: '#FFE4E1', ground: '#FFCDD2', accent: '#FF6B6B' },
+      granja: { top: '#FFFBF0', bottom: '#FFF3E0', ground: '#FFE0B2', accent: '#F7DC6F' },
+      bosque: { top: '#F0FFF4', bottom: '#E8F5E9', ground: '#C8E6C9', accent: '#58D68D' },
+      selva: { top: '#F0FDFA', bottom: '#E0F2F1', ground: '#B2DFDB', accent: '#1ABC9C' },
+    };
+    const p = palettes[this.levelData.biome] || palettes.clinica;
+
+    // Sky gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, p.top);
+    grad.addColorStop(1, p.bottom);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Decorative clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    const time = this.stateTimer;
+    for (let i = 0; i < 3; i++) {
+      const cx = w * (0.15 + i * 0.35) + Math.sin(time * 0.5 + i * 2) * 30;
+      const cy = h * 0.06 + Math.cos(time * 0.3 + i) * 8;
+      ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI * 2);
+      ctx.arc(cx + 28, cy - 6, 28, 0, Math.PI * 2);
+      ctx.arc(cx + 55, cy, 32, 0, Math.PI * 2);
+      ctx.fill();
     }
-    
-    // Animal
-    if (this.animal) {
-      this.animal.render(ctx);
-    }
-    
-    // Particles
-    this.particles.forEach(p => {
-      ctx.globalAlpha = p.opacity;
-      ctx.font = `${p.size}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(p.emoji, p.x, p.y);
-    });
-    ctx.globalAlpha = 1;
-    
-    // Mechanic UI
-    if (this.mechanic && this.state === 'treating') {
-      this.mechanic.render(ctx);
-    }
-    
-    // Level indicator
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    this.roundRect(ctx, 10, 10, 140, 42, 12);
+
+    // Ground
+    ctx.fillStyle = p.ground;
+    ctx.beginPath();
+    ctx.ellipse(w / 2, h, w * 0.95, h * 0.2, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#5D4037';
-    ctx.font = "bold 18px 'Nunito', sans-serif";
-    ctx.textAlign = 'left';
-    ctx.fillText(`Nivel ${this.levelData.id}`, 22, 38);
-    
-    // Sound button hint
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    this.roundRect(ctx, width - 60, 10, 50, 42, 12);
-    ctx.fill();
-    ctx.font = '20px sans-serif';
+
+    // Flowers
+    ctx.font = '22px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🔊', width - 35, 38);
+    const flowers = ['🌸', '🌼', '🌻', '🌺', '🌷', '🌹', '💐'];
+    for (let i = 0; i < 6; i++) {
+      const fx = w * (0.1 + i * 0.16);
+      const fy = h * 0.9 + Math.sin(time * 2 + i * 1.3) * 4;
+      ctx.globalAlpha = 0.7;
+      ctx.fillText(flowers[i], fx, fy);
+    }
+    ctx.globalAlpha = 1;
+
+    // Biome emoji decorations
+    const biomeEmojis = {
+      clinica: { emoji: '🏠', x: w * 0.88, y: h * 0.12 },
+      granja: { emoji: '🚜', x: w * 0.88, y: h * 0.12 },
+      bosque: { emoji: '🦋', x: w * 0.88, y: h * 0.12 },
+      selva: { emoji: '🦜', x: w * 0.88, y: h * 0.12 },
+    };
+    const deco = biomeEmojis[this.levelData.biome];
+    if (deco) {
+      ctx.font = '40px sans-serif';
+      ctx.globalAlpha = 0.3;
+      ctx.fillText(deco.emoji, deco.x, deco.y);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  renderLevelBadge(ctx) {
+    const badgeW = 110;
+    const badgeH = 42;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    ctx.shadowBlur = 8;
+    this.roundRect(ctx, 12, 12, badgeW, badgeH, 14);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#5D4037';
+    ctx.font = "bold 16px 'Nunito', sans-serif";
+    ctx.textAlign = 'left';
+    ctx.fillText(`⭐ Nivel ${this.levelData.id}`, 24, 40);
+  }
+
+  renderSoundButton(ctx, w) {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    ctx.shadowBlur = 6;
+    this.roundRect(ctx, w - 58, 12, 46, 42, 12);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.font = '22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🔊', w - 35, 40);
   }
 
   roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
-
-  renderBackground(ctx, width, height) {
-    const biomeColors = {
-      home: { top: '#FFF8F0', bottom: '#FFE4E1', ground: '#C8E6C9' },
-      farm: { top: '#F0FFF8', bottom: '#E8F5E9', ground: '#A5D6A7' },
-      forest: { top: '#F0F0FF', bottom: '#E8F5E9', ground: '#81C784' },
-      jungle: { top: '#FFF5F0', bottom: '#FFF8E1', ground: '#66BB6A' }
-    };
-    
-    const colors = biomeColors[this.levelData.biome] || biomeColors.home;
-    
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, colors.top);
-    gradient.addColorStop(1, colors.bottom);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-    
-    // Decorative elements
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    // Clouds
-    for (let i = 0; i < 3; i++) {
-      const cx = width * (0.2 + i * 0.3) + Math.sin(this.stateTimer + i) * 20;
-      const cy = height * 0.08 + Math.cos(this.stateTimer * 0.5 + i) * 10;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
-      ctx.arc(cx + 25, cy - 5, 25, 0, Math.PI * 2);
-      ctx.arc(cx + 50, cy, 30, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    // Ground
-    ctx.fillStyle = colors.ground;
-    ctx.beginPath();
-    ctx.ellipse(width / 2, height, width * 0.9, height * 0.18, 0, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Small flowers on ground
-    ctx.font = '20px sans-serif';
-    ctx.textAlign = 'center';
-    for (let i = 0; i < 5; i++) {
-      const fx = width * (0.15 + i * 0.18);
-      const fy = height * 0.92 + Math.sin(this.stateTimer * 2 + i) * 3;
-      ctx.fillText(['🌸', '🌼', '🌻', '🌺', '🌷'][i], fx, fy);
-    }
-  }
-
-  onTreatmentSuccess() {
-    this.state = 'healing';
-    this.paula.setState('celebrate');
-    this.animal.heal();
-    this.spawnHearts();
-    this.playSuccessSound();
-    
-    setTimeout(() => {
-      if (this.onComplete) this.onComplete();
-    }, 3000);
-  }
-
-  onTreatmentFail() {
-    this.playFailSound();
-  }
-
-  playSuccessSound() {
-    // Simple success sound using Web Audio API
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-      oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-      oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
-      
-      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-      
-      oscillator.start(audioCtx.currentTime);
-      oscillator.stop(audioCtx.currentTime + 0.5);
-    } catch (e) {
-      // Audio not supported
-    }
-  }
-
-  playFailSound() {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-      oscillator.frequency.setValueAtTime(250, audioCtx.currentTime + 0.15);
-      
-      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-      
-      oscillator.start(audioCtx.currentTime);
-      oscillator.stop(audioCtx.currentTime + 0.3);
-    } catch (e) {
-      // Audio not supported
-    }
-  }
-
-  spawnHearts() {
-    const cx = this.animal.centerX();
-    const cy = this.animal.y;
-    
-    for (let i = 0; i < 12; i++) {
-      this.particles.push({
-        x: cx,
-        y: cy,
-        vx: (Math.random() - 0.5) * 200,
-        vy: -Math.random() * 300 - 100,
-        emoji: ['❤️', '💚', '💛', '💙', '💖'][Math.floor(Math.random() * 5)],
-        size: 20 + Math.random() * 15,
-        life: 2 + Math.random(),
-        maxLife: 2 + Math.random(),
-        opacity: 1
-      });
-    }
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
   }
 
   handleTouch(x, y) {
-    // Check if sound button was pressed
-    if (x > this.canvas.width - 70 && x < this.canvas.width - 10 && y > 10 && y < 55) {
-      this.speakText(this.levelData.question);
-      if (this.mechanic && this.mechanic.buttons) {
-        this.mechanic.buttons.forEach(btn => {
-          if (btn.word) this.speakText(btn.word);
-        });
-      }
+    // Sound button
+    if (x > this.canvas.width - 65 && x < this.canvas.width - 10 && y > 10 && y < 58) {
+      this.speakText(this.levelData.instruction);
       return true;
     }
-    
-    if (this.state === 'treating' && this.mechanic) {
+
+    if (this.state === 'playing' && this.mechanic) {
       return this.mechanic.handleTouch(x, y);
     }
     return false;
   }
 
+  handleTouchMove(x, y) {
+    if (this.state === 'playing' && this.mechanic) {
+      this.mechanic.handleTouchMove(x, y);
+      this.mechanic.handleMouseMove(x, y);
+    }
+  }
+
+  handleTouchEnd() {
+    if (this.state === 'playing' && this.mechanic && this.mechanic.handleTouchEnd) {
+      this.mechanic.handleTouchEnd();
+    }
+  }
+
   handleMouseMove(x, y) {
-    if (this.state === 'treating' && this.mechanic) {
+    if (this.state === 'playing' && this.mechanic) {
       this.mechanic.handleMouseMove(x, y);
     }
   }
 
   resize() {
+    if (this.mechanic) this.mechanic.resize(this.canvas.width, this.canvas.height);
+  }
+
+  destroy() {
+    if (this.floatAnim) this.floatAnim.stop();
     if (this.mechanic) {
-      this.mechanic.resize(this.canvas.width, this.canvas.height);
+      // Cleanup any ongoing tweens
     }
   }
 }
