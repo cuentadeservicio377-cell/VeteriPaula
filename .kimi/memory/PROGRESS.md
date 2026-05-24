@@ -3,43 +3,56 @@
 ## Sesión Actual: 2026-05-23
 
 ### Estado General
-Migración completa al nuevo flujo de trabajo project-flow + gbrain + game-dev skills.
+Nivel 1 en camino a "perfecto". Migración al flujo project-flow completada en sesión anterior.
 
 ### Hecho en esta sesión ✅
-- [x] Instalada skill `creative-design/develop-web-game` (OpenAI)
-  - Scripts Playwright para testing automatizado
-  - Referencias de action payloads
-- [x] Instalada skill `game-developer` (Jeffallan/skillfish)
-  - Patrones: State Machine, Object Pooling, Component Caching
-  - Referencias: ECS, performance, networking
-- [x] Creado skill personalizado `.kimi/skills/veteripaula-dev/SKILL.md`
-  - Combina project-flow + gbrain + ambas skills
-  - Define hooks de testing: `render_game_to_text()` y `advanceTime()`
-  - Define flujo de inicio/cierre de sesión
-- [x] Actualizado `.kimi/AGENTS.md`
-  - Stack definitivo documentado
-  - Regla de Scope Lock
-  - Integración de skills con comandos específicos
-  - Checklist de cierre de sesión
-- [x] Creado `.kimi/memory/PLAN.md` con 4 fases:
-  - Fase 0: Migración (COMPLETA)
-  - Fase 1: Sonidos y Audio (v2.1)
-  - Fase 2: Arte y Animaciones (v2.2)
-  - Fase 3: Coleccionables y Progreso (v2.3)
-  - Fase 4: Testing y Pulido (v2.4)
-- [x] Creado `tests/e2e/veteripaula-actions.json`
-  - Actions para TapWord, DragSyllables, FollowSteps, Menu Flow
-- [x] Sincronizado con gbrain:
-  - `veteripaula/memory` ✅
-  - `veteripaula/plan` ✅
-  - `veteripaula/progress` ✅
-- [x] Commit realizado: `b762ab3`
+- [x] Creado `docs/specs/ASSET_DESIGN_GUIDE.md`
+  - Especificaciones completas para diseñador/ilustrador futuro
+  - Sprites, animaciones, paleta, backgrounds, familiares
+  - Checklist de assets por nivel
+  - Flujo de trabajo con diseñador
+- [x] Pulido pixel art de Paula
+  - Agregado estado `curing` (agachada aplicando venda)
+  - Todos los estados necesarios para nivel 1: idle, walk, celebrate, pointing, worried, curing
+- [x] Creado `src/audio/PhoneticEngine.js`
+  - Síntesis de vocales /a/, /e/, /i/, /o/, /u/ usando formantes
+  - Síntesis de consonantes: m, n, p, t, k, b, d, g, s, v, f, l, r
+  - `spellPhonetic(word)` — deletrea palabra fonéticamente
+  - `playNewSounds(sounds)` — reproduce sonidos nuevos del nivel
+  - Integrado en TapWord: al acertar, deletrea la palabra
+  - Integrado en GameScene: reproduce newSounds al inicio del nivel
+- [x] Agregados hooks de testing
+  - `window.render_game_to_text()` — estado completo del juego en JSON
+  - `window.advanceTime(ms)` — avance determinístico de frames
+  - Exponen scene y loop en `window.__gameScene` y `window.__gameLoop`
+  - Limpieza al desmontar componente
+- [x] Mejoras en GameScene
+  - Paula cambia a `curing` brevemente antes de celebrar
+  - Reproduce fonemas nuevos del nivel automáticamente
+- [x] Build exitoso: 321KB JS, 1.48KB CSS
+- [x] Commit: `49991a9`
+- [x] Sincronizado con gbrain: `veteripaula/progress`, `veteripaula/design-guide`
+
+### Estado del Nivel 1
+| Sistema | Estado |
+|---------|--------|
+| Motor Canvas | ✅ Funcionando |
+| Paula (6 estados) | ✅ Completo |
+| Pipo (4 estados + interacciones) | ✅ Completo |
+| TapWord mechanic | ✅ + fonética integrada |
+| Anti-frustración | ✅ Progresivo, 4 etapas |
+| Partículas | ✅ Confetti, corazones, estrellas |
+| TTS | ✅ Instrucciones y celebraciones |
+| SFX | ✅ Procedural completo |
+| Fonética | ✅ /a/, /e/ del nivel 1 |
+| Testing hooks | ✅ Playwright ready |
+| Flujo completo | ✅ Home → Game → Celebration |
 
 ### Próxima Tarea
-**Fase 1.1: Sistema de fonética por letra**
-- Crear `src/audio/PhoneticEngine.js`
-- Mapear vocales a sonidos fonéticos
-- Integrar Web Audio API
+**Probar en iPad real** — El nivel 1 está listo funcionalmente. Falta:
+1. Testing físico en iPad (touch, audio, TTS)
+2. Ajustes de timing basados en playtesting con Paula
+3. Cuando tengamos sprites del diseñador: reemplazar pixel art procedural
 
 ### Pendientes del Backlog
 Ver `TODOS.md` para lista completa de v2.x
