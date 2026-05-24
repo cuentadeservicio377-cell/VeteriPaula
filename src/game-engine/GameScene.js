@@ -11,6 +11,7 @@ import { createDecoration, FLOWER_TYPES, BIOME_DECO } from './sprites/Decoration
 import { createItemSprite } from './sprites/Items.js';
 import { speak, stopTTS, speakEncouragement, wakeUpSpeechSynthesis } from '../utils/tts.js';
 import { ensureAudioContext, playMagic, playDing, startBackgroundMusic, stopBackgroundMusic, playDogBark, playDogWhine } from '../utils/sfx.js';
+import { playNewSounds } from '../audio/PhoneticEngine.js';
 
 /**
  * v2.3 Game Scene — Tutorial hand, Paula pointing, background music, star system
@@ -199,6 +200,14 @@ export class GameScene {
       }, 600);
       this.timers.push(t1);
     }
+
+    // Play new sounds for this level (phonetic introduction)
+    if (this.levelData.newSounds && this.levelData.newSounds.length > 0) {
+      const tSound = setTimeout(() => {
+        playNewSounds(this.levelData.newSounds);
+      }, this.levelData.id === 1 ? 8000 : 2000);
+      this.timers.push(tSound);
+    }
   }
 
   // Tutorial system
@@ -268,7 +277,13 @@ export class GameScene {
 
   onTreatmentSuccess() {
     this.state = 'success';
-    this.paula.setState('celebrate');
+    // Brief curing pose before celebrating
+    this.paula.setState('curing');
+    const curingTimer = setTimeout(() => {
+      this.paula.setState('celebrate');
+    }, 400);
+    this.timers.push(curingTimer);
+
     if (this.levelData.id === 1 && this.animal.celebrate) {
       this.animal.celebrate();
     } else {

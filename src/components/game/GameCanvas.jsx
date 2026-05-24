@@ -42,6 +42,47 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
     gameLoopRef.current = loop;
     loop.start();
 
+    // Expose testing hooks for Playwright
+    window.__gameScene = scene;
+    window.__gameLoop = loop;
+    window.render_game_to_text = () => {
+      const mechanic = scene.mechanic;
+      const buttons = mechanic?.buttons?.map(b => ({
+        word: b.word,
+        isCorrect: b.isCorrect,
+        confirmed: b.confirmed,
+        wrong: b.wrong,
+        x: Math.round(b.x),
+        y: Math.round(b.y),
+      })) || [];
+      return JSON.stringify({
+        mode: scene.state,
+        level: levelData.id,
+        biome: levelData.biome,
+        mechanic: levelData.mechanic,
+        failCount: scene.failCount,
+        hintLevel: scene.hintLevel,
+        paula: {
+          x: Math.round(scene.paula?.x || 0),
+          y: Math.round(scene.paula?.y || 0),
+          state: scene.paula?.state || 'none',
+        },
+        animal: {
+          x: Math.round(scene.animal?.x || 0),
+          y: Math.round(scene.animal?.y || 0),
+          state: scene.animal?.state || 'none',
+          type: scene.animal?.type || 'none',
+        },
+        buttons,
+        particles: scene.particles?.particles?.length || 0,
+        completed: mechanic?.completed || false,
+        timestamp: Date.now(),
+      });
+    };
+    window.advanceTime = (ms) => {
+      loop.advanceTime(ms);
+    };
+
     const getPos = (e) => {
       const rect = canvas.getBoundingClientRect();
       const touch = e.changedTouches ? e.changedTouches[0] : e;
@@ -103,6 +144,10 @@ export default function GameCanvas({ levelData, onComplete, onFail }) {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mouseup', handleMouseUp);
+      delete window.__gameScene;
+      delete window.__gameLoop;
+      delete window.render_game_to_text;
+      delete window.advanceTime;
     };
   }, [levelData, handleComplete, onFail]);
 

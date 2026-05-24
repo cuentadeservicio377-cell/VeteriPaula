@@ -2,6 +2,7 @@ import { WordButton } from '../entities/WordButton.js';
 import { tween, shake } from '../../utils/tween.js';
 import { speak, speakSuccess, speakEncouragement, speakWord } from '../../utils/tts.js';
 import { playPop, playDing, playDogWhine, playDogNope } from '../../utils/sfx.js';
+import { spellPhonetic, playNewSounds } from '../../audio/PhoneticEngine.js';
 import { createItemSprite, STEP_TO_SPRITE } from '../sprites/Items.js';
 
 /**
@@ -147,6 +148,9 @@ export class TapWordMechanic {
     this.completed = true;
     btn.setCorrect();
     playDing();
+
+    // Phonetic spelling of the correct word
+    spellPhonetic(btn.word, 0.22);
 
     // Get animal position from scene
     const animal = this.scene?.animal;

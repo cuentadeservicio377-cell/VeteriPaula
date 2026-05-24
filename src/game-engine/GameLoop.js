@@ -61,6 +61,21 @@ export class GameLoop {
     this.animationId = requestAnimationFrame(this.loop);
   };
 
+  /**
+   * Advance time by ms milliseconds for deterministic testing.
+   * Used by Playwright test client.
+   */
+  advanceTime(ms) {
+    const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+    for (let i = 0; i < steps; i++) {
+      if (this.updateFn) this.updateFn(1 / 60);
+    }
+    if (this.renderFn) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.renderFn(this.ctx, this.canvas.width, this.canvas.height);
+    }
+  }
+
   destroy() {
     this.stop();
     window.removeEventListener('resize', this._resizeHandler);
