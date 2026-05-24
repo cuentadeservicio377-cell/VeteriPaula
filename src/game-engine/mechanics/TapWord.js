@@ -20,7 +20,6 @@ export class TapWordMechanic {
     this.floatAnims = [];
     this.scene = null; // set by GameScene
     this.flyingItem = null; // flying bandage/item sprite
-    this.spellingLetters = null; // visual spelling state
     this.createButtons();
   }
 
@@ -29,12 +28,12 @@ export class TapWordMechanic {
     const correct = this.levelData.correct;
 
     const isNarrow = this.w < 500;
-    const btnWidth = isNarrow ? Math.min(160, (this.w - 40) / options.length - 12) : 200;
-    const btnHeight = isNarrow ? 72 : 90;
-    const spacing = isNarrow ? 12 : 30;
-    const totalWidth = options.length * btnWidth + (options.length - 1) * spacing;
+    // Bigger bubbles for kids' fingers (min 140px diameter)
+    const btnSize = isNarrow ? Math.min(160, (this.w - 60) / options.length - 20) : 180;
+    const spacing = isNarrow ? 20 : 40;
+    const totalWidth = options.length * btnSize + (options.length - 1) * spacing;
     const startX = (this.w - totalWidth) / 2;
-    const y = this.h * 0.62;
+    const y = this.h * 0.58;
 
     this.buttons = options.map((word, i) => {
       // Create icon sprite for this button (if mapping exists)
@@ -45,12 +44,13 @@ export class TapWordMechanic {
         iconSprite = createItemSprite(spriteType, 0, 0, 4);
       }
 
-      const btn = new WordButton(startX + i * (btnWidth + spacing), y, word, word === correct, {
-        width: btnWidth, height: btnHeight, fontSize: isNarrow ? 28 : 36,
+      const btn = new WordButton(startX + i * (btnSize + spacing), y, word, word === correct, {
+        width: btnSize, height: btnSize, fontSize: isNarrow ? 26 : 32,
         bgColor: '#FFFFFF', hoverColor: '#FFDac1',
         correctColor: '#B5EAD7', wrongColor: '#FF9AA2',
         iconSprite: iconSprite,
-        iconScale: 1.2,
+        iconScale: 1.4,
+        borderRadius: btnSize / 2,
       });
       btn.baseY = y;
       btn.floatOffset = i * 1.5;
@@ -119,39 +119,6 @@ export class TapWordMechanic {
       ctx.restore();
     }
 
-    // Visual spelling animation
-    if (this.spellingLetters) {
-      const totalW = this.spellingLetters.length * 32;
-      const startX = (this.w - totalW) / 2;
-      const y = this.h * 0.48;
-
-      this.spellingLetters.forEach((item, i) => {
-        const x = startX + i * 32;
-        const isNew = item.isVowel && (item.letter.toLowerCase() === 'a' || item.letter.toLowerCase() === 'e');
-
-        // Background circle
-        ctx.beginPath();
-        ctx.arc(x + 14, y, 18, 0, Math.PI * 2);
-        if (item.highlighted) {
-          ctx.fillStyle = isNew ? '#FFD700' : '#B5EAD7';
-          ctx.shadowColor = isNew ? '#FFD700' : '#B5EAD7';
-          ctx.shadowBlur = 15;
-        } else {
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.shadowBlur = 0;
-        }
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Letter
-        ctx.fillStyle = item.highlighted ? '#5D4037' : '#8D6E63';
-        ctx.font = `bold ${item.highlighted ? 22 : 18}px 'Nunito', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(item.letter, x + 14, y);
-      });
-    }
-
     // Tap hint
     if (!this.completed) {
       ctx.fillStyle = '#BCAAA4';
@@ -167,23 +134,30 @@ export class TapWordMechanic {
         playPop();
         speakWord(btn.word);
 
-        // Immediate squash feedback
+        // Immediate squash feedback (extreme for kids)
         tween({
           from: { scale: btn.scale },
-          to: { scale: 0.85 },
-          duration: 60,
+          to: { scale: 0.6 },
+          duration: 50,
           ease: 'easeOut',
           onUpdate: (v) => { btn.scale = v.scale; },
           onComplete: () => {
             tween({
               from: { scale: btn.scale },
               to: { scale: 1.0 },
-              duration: 120,
-              ease: 'easeOutBack',
+              duration: 200,
+              ease: 'easeOutElastic',
               onUpdate: (v) => { btn.scale = v.scale; },
             });
           },
         });
+
+        // Particles on ANY touch (keeps it fun)
+        if (this.scene && this.scene.particles) {
+          const cx = btn.x + btn.width / 2;
+          const cy = btn.y + btn.height / 2;
+          this.scene.particles.spawnStars(cx, cy, 8);
+        }
 
         if (btn.isCorrect) {
           this.onCorrect(btn);
@@ -201,41 +175,44 @@ export class TapWordMechanic {
     btn.setCorrect();
     playDing();
 
-    // Visual spelling: highlight each letter with phonetic sound
-    this.spellVisual(btn.word);
+    // Particles burst from the correct bubble
+    if (this.scene && this.scene.particles) {
+      const cx = btn.x + btn.width / 2;
+      const cy = btn.y + btn.height / 2;
+      this.scene.particles.spawnConfetti(cx, cy, 30);
+      this.scene.particles.spawnStars(cx, cy, 15);
+    }
 
     // Get animal position from scene
     const animal = this.scene?.animal;
     const targetX = animal ? animal.x + animal.width * 0.6 : this.w * 0.65;
     const targetY = animal ? animal.y + animal.height * 0.5 : this.h * 0.25;
 
-    // Phase 1: Button shrinks and flies toward animal (fast!)
+    // Button flies to animal FAST
     tween({
       from: { x: btn.x, y: btn.y, scale: 1, alpha: 1 },
-      to: { x: targetX, y: targetY, scale: 0.4, alpha: 1 },
-      duration: 300,
+      to: { x: targetX, y: targetY, scale: 0.3, alpha: 1 },
+      duration: 200,
       ease: 'easeOutBack',
       onUpdate: (v) => { btn.x = v.x; btn.y = v.y; btn.scale = v.scale; },
       onComplete: () => {
         btn.visible = false;
 
-        // Create a flying item sprite that "sticks" to the animal's leg
+        // Item pops in on Pipo
         const spriteType = STEP_TO_SPRITE[btn.word.toUpperCase()];
         if (spriteType && animal) {
           this.flyingItem = {
             sprite: createItemSprite(spriteType, targetX, targetY, 8),
-            timer: 1.0,
+            timer: 0.5,
             phase: 'stick',
             alpha: 1,
           };
-
-          // Animate the item appearing (pop in)
           if (this.flyingItem.sprite) {
             this.flyingItem.sprite.scale = 0;
             tween({
               from: { s: 0 },
               to: { s: 8 },
-              duration: 200,
+              duration: 150,
               ease: 'easeOutBack',
               onUpdate: (v) => {
                 if (this.flyingItem && this.flyingItem.sprite) {
@@ -246,41 +223,48 @@ export class TapWordMechanic {
           }
         }
 
-        // Animal reaction
-        if (animal) {
-          animal.reactCorrect('😊');
-        }
-
+        if (animal) animal.reactCorrect('😊');
         speakSuccess(btn.word);
 
-        // Trigger scene success quickly after bandage sticks
-        const delay = this.flyingItem ? 700 : 100;
+        // IMMEDIATE celebration
         setTimeout(() => {
           if (this.onSuccess) this.onSuccess();
-        }, delay);
+        }, 200);
       },
     });
   }
 
   onWrong(btn) {
     btn.setWrong();
-    playDogNope(); // Characterful dog head-shake sound
+    playDogNope();
 
-    // Animal reaction
+    // Particles even on wrong (keeps it fun, not punishing)
+    if (this.scene && this.scene.particles) {
+      const cx = btn.x + btn.width / 2;
+      const cy = btn.y + btn.height / 2;
+      this.scene.particles.spawnConfetti(cx, cy, 10);
+    }
+
     const animal = this.scene?.animal;
     if (animal && animal.reactWrong) {
       animal.reactWrong('🤔');
     }
 
-    shake(btn, 12, 500);
+    // Bounce the wrong bubble away
+    tween({
+      from: { x: btn.x, y: btn.y },
+      to: { x: btn.x + (Math.random() - 0.5) * 100, y: btn.y + 50 },
+      duration: 300,
+      ease: 'easeOut',
+      onUpdate: (v) => { btn.x = v.x; btn.y = v.y; },
+      onComplete: () => {
+        btn.reset();
+      },
+    });
 
     setTimeout(() => {
       speakEncouragement();
-    }, 300);
-
-    setTimeout(() => {
-      btn.reset();
-    }, 800);
+    }, 200);
 
     if (this.onFail) this.onFail(btn.word);
   }
@@ -301,40 +285,6 @@ export class TapWordMechanic {
 
   handleTouchEnd() {
     // Nothing special needed for tap mechanic
-  }
-
-  /**
-   * Visual spelling: highlight each letter with phonetic sound
-   */
-  spellVisual(word) {
-    const letters = word.split('');
-    const vowels = 'aeiou';
-    this.spellingLetters = letters.map((letter, i) => ({
-      letter,
-      index: i,
-      highlighted: false,
-      isVowel: vowels.includes(letter.toLowerCase()),
-    }));
-
-    // Light up letters one by one with phonetic sounds
-    letters.forEach((letter, i) => {
-      setTimeout(() => {
-        if (this.spellingLetters[i]) {
-          this.spellingLetters[i].highlighted = true;
-        }
-        const vowels = 'aeiou';
-        if (vowels.includes(letter.toLowerCase())) {
-          playVowel(letter);
-        } else {
-          playConsonant(letter);
-        }
-      }, i * 180);
-    });
-
-    // Clear after animation
-    setTimeout(() => {
-      this.spellingLetters = null;
-    }, letters.length * 180 + 500);
   }
 
   // Anti-frustration hints

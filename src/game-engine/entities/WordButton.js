@@ -46,31 +46,45 @@ export class WordButton extends Entity {
     else if (this.wrong) color = this.wrongColor;
     else if (this.hovered) color = this.hoverColor;
 
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    const r = Math.min(this.width, this.height) / 2;
+
     // Glow effect (hint anti-frustration)
     if (this.glowRadius > 0) {
       ctx.save();
       ctx.shadowColor = '#FFD700';
       ctx.shadowBlur = this.glowRadius;
-      this.roundRect(ctx, -4, -4, this.width + 8, this.height + 8, this.borderRadius + 4);
       ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
 
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    this.roundRect(ctx, 4, 4, this.width, this.height, this.borderRadius);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath();
+    ctx.arc(cx + 3, cy + 4, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // Button body
+    // Button body (bubble)
     ctx.fillStyle = color;
-    this.roundRect(ctx, 0, 0, this.width, this.height, this.borderRadius);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Shine highlight (bubble effect)
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.25, cy - r * 0.25, r * 0.35, r * 0.2, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Border
-    ctx.strokeStyle = this.confirmed ? '#5D4037' : 'rgba(93,64,55,0.2)';
+    ctx.strokeStyle = this.confirmed ? '#5D4037' : 'rgba(93,64,55,0.15)';
     ctx.lineWidth = this.confirmed || this.wrong ? 3 : 2;
-    this.roundRect(ctx, 0, 0, this.width, this.height, this.borderRadius);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
 
     // Calculate icon metrics (relative coords within button)

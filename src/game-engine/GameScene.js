@@ -64,39 +64,31 @@ export class GameScene {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // Paula enters from left
-    this.paula = new Paula(-120, h * 0.35, { state: 'walk', scale: 6 });
+    // Paula already in position — no walking animation
+    this.paula = new Paula(w * 0.12, h * 0.35, { state: 'idle', scale: 6 });
 
     // Animal waits on the right, hurt
     // Level 1 special: Pipo the dog with interactive touch zones
     if (this.levelData.id === 1) {
       this.animal = new Pipo(w * 0.52, h * 0.32, 10);
       this.animal.state = 'lying_down';
+      this.animal.healProgress = 0;
     } else {
       this.animal = new Animal(w * 0.55, h * 0.30, this.levelData.animal, {
         state: 'hurt', injury: this.levelData.injury, scale: 6
       });
     }
 
-    // Animate Paula walking in
-    tween({
-      from: { x: -120 },
-      to: { x: w * 0.12 },
-      duration: 1200,
-      ease: 'easeOutBack',
-      onUpdate: (v) => { this.paula.x = v.x; },
-      onComplete: () => {
-        this.paula.setState('idle');
-        if (this.levelData.id === 1) {
-          // Level 1: exploration phase before buttons appear
-          this.state = 'explore';
-          this.startLevel1Flow();
-        } else {
-          this.state = 'playing';
-          this.createMechanic();
-        }
-      },
-    });
+    // Start immediately — no delays
+    this.state = 'playing';
+    this.createMechanic();
+
+    // Brief Paula intro (0.5s max)
+    if (this.levelData.id === 1) {
+      setTimeout(() => {
+        speak('¡Venda!', { rate: 1.0, pitch: 1.1 });
+      }, 200);
+    }
 
     // Start floating animation for animal
     this.floatAnim = float(this.animal, 4, 1.5);
@@ -130,35 +122,7 @@ export class GameScene {
     }
   }
 
-  // Level 1 special flow: exploration → choice → celebration
-  startLevel1Flow() {
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
-    // Step 1: Paula presents Pipo (TTS + Pipo whines)
-    // Fast intro: Paula presents the problem in 3 seconds total
-    const t1 = setTimeout(() => {
-      speak('¡Hola! Pipo se lastimó la pata. ¡Ayúdame a curarlo!', { rate: 0.9, pitch: 1.1 });
-    }, 300);
-    this.timers.push(t1);
-
-    const t2 = setTimeout(() => {
-      if (this.animal && this.animal.setState) {
-        this.animal.setState('head_up');
-      }
-      playDogWhine();
-    }, 1200);
-    this.timers.push(t2);
-
-    // Step 2: Show question and buttons quickly
-    const t3 = setTimeout(() => {
-      this.state = 'playing';
-      this.createMechanic();
-      speak(this.levelData.instruction, { rate: 0.9 });
-    }, 3000);
-    this.timers.push(t3);
-
-  }
+  // Level 1 now starts immediately — see setupScene
 
   createMechanic() {
     const w = this.canvas.width;

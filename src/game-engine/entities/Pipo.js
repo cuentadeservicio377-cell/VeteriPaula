@@ -50,6 +50,10 @@ export class Pipo {
     this.blinkTimer = 0;
     this.isBlinking = false;
 
+    // Progressive healing (0-5 for level 1)
+    this.healProgress = 0;
+    this.maxHealProgress = 5;
+
     // Hearts for celebration
     this.hearts = [];
     this.reactionText = null;
