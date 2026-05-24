@@ -1,73 +1,31 @@
-# Progreso
+# VeteriPaula — Progreso
 
-## Historial de Sesiones
+## Sesión Actual: 2026-05-23
 
-### 2026-05-19 — Sesión Inicial
-- ✅ Revisión de skills disponibles
-- ✅ Inicialización de repositorio Git
-- ✅ Creación de repositorio público en GitHub
-- ✅ Especificación de diseño completa
-- ✅ Setup de proyecto React + Vite
-- ✅ Game engine con Canvas 2D
-- ✅ 50 niveles definidos (4 biomas)
-- ✅ 3 mecánicas de lectura implementadas
-- ✅ Entidad Paula (personaje jugador)
-- ✅ Entidad Animal (24 tipos, 3 estados)
-- ✅ Pantallas React: Home, Map, Loading, Celebration
-- ✅ Sistema de celebraciones con 6 familiares
-- ✅ Minijuegos de vocabulario en pantallas de carga
-- ✅ TTS (Web Speech API) para lectura en voz alta
-- ✅ Efectos de sonido con Web Audio API
-- ✅ Progreso guardado en localStorage
-- ✅ Build funcionando y desplegado en GitHub Pages + Netlify
+### Estado General
+Nivel 1 implementado y funcionando. Gameplay completo con timer y callbacks.
 
-### 2026-05-19 — Rediseño v2.0 (Investigación + Implementación)
-- ✅ Investigación con 4 agentes en paralelo:
-  - Benchmark de juegos educativos de lectura (TOP 5)
-  - Auditoría de código actual
-  - Comparación de motores de juegos web
-  - Mejores prácticas de game design para niños de 6 años
-- ✅ Plan de rediseño v2.0 documentado
-- ✅ Reducción de 50 a 20 niveles de alta calidad
-- ✅ 4 bloques de 5 niveles con desbloqueo progresivo
-- ✅ Sistema de tweening nativo (6 easing curves)
-- ✅ Sistema de drag & drop con magnetismo a slots
-- ✅ Sistema de partículas (confetti, corazones, estrellas, sparkles)
-- ✅ Mecánica TapWord v2 (palabras flotantes, animación de vuelo)
-- ✅ Mecánica DragSyllables v2 (arrastrar sílabas con snap)
-- ✅ Mecánica FollowSteps v2 (arrastrar objetos en orden)
-- ✅ GameScene v2 con fondos por bioma, Paula animada, sistema anti-frustración
-- ✅ Paleta de colores por bloque
-- ✅ UI screens actualizadas (Home, Map, Celebration)
-- ✅ Build exitoso y push a GitHub
+### Features Completadas ✅
+- Timer del nivel 1
+- Fixes de callbacks
+- Screenshots de evidencia (10 imágenes)
+  - Intro, gameplay, clicked, item-fly, celebration, success
+  - Debug screenshots para QA
 
-## Features Completadas v2.0
-- [x] Investigación de mercado con agentes
-- [x] 20 niveles de calidad (vs 50 mediocres)
-- [x] 4 bloques desbloqueables
-- [x] Tweening engine nativo
-- [x] Drag & drop con magnetismo
-- [x] Particle system (confetti, hearts, stars, sparkles, magic)
-- [x] Mecánicas rediseñadas con animaciones ricas
-- [x] Anti-frustración: reintentos suaves, pistas, sin game over
-- [x] Paula con estados emocionales (idle, worried, celebrate, walk)
-- [x] Animal con floating animation
-- [x] Fondos temáticos por bioma
-- [x] Paleta de colores por bloque
-- [x] Mapa de niveles con bloques visuales
-- [x] **Pixel art Avatar World style** — Paula, 19 animales, flores, decoraciones
-- [x] Sistema de sprites Canvas 2D (matrix → scaled pixels)
-- [x] Animaciones por frames (idle bob, celebrate bounce, hurt sway)
+### Assets Creados
+- `level1-intro.png`
+- `level1-start-screen.png`
+- `level1-playing.png`
+- `level1-clicked.png`
+- `level1-item-fly.png`
+- `level1-gameplay.png`
+- `level1-celebration.png`
+- `level1-success.png`
+- `level1-debug.png`
+- `level1-debug2.png`
 
-## Features Pendientes v2.x
-- [ ] Sonidos de fonética por letra
-- [ ] Música ambiental por bloque
-- [ ] Sistema de estrellas por nivel
-- [ ] Galería de animales curados
-- [ ] Testing con Playwright
-- [ ] Playtesting con niños reales
-- [ ] Dashboard para padres
-- [ ] Racha diaria suave
-
-## Bloqueadores Resueltos
-- Ninguno actualmente
+### Próximos Pasos
+1. Definir stack técnico definitivo
+2. Nivel 2: mecánicas adicionales
+3. Sistema de puntuación
+4. Integración de sonido
