@@ -11,7 +11,7 @@ export const levels = [
     animal: 'perro', injury: 'pata',
     mechanic: 'tap_word',
     instruction: 'Pipo se lastimó la pata. ¿Qué necesita?',
-    options: ['VENDA', 'HUESO'],
+    options: ['VENDA', 'PATA'],
     correct: 'VENDA',
     treatment: 'una venda en la pata',
     newSounds: ['/a/', '/e/'],

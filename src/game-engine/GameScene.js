@@ -136,9 +136,10 @@ export class GameScene {
     const h = this.canvas.height;
 
     // Step 1: Paula presents Pipo (TTS + Pipo whines)
+    // Fast intro: Paula presents the problem in 3 seconds total
     const t1 = setTimeout(() => {
-      speak('¡Hola! Soy Paula. Este es Pipo, se lastimó la pata.', { rate: 0.75 });
-    }, 400);
+      speak('¡Hola! Pipo se lastimó la pata. ¡Ayúdame a curarlo!', { rate: 0.9, pitch: 1.1 });
+    }, 300);
     this.timers.push(t1);
 
     const t2 = setTimeout(() => {
@@ -146,16 +147,15 @@ export class GameScene {
         this.animal.setState('head_up');
       }
       playDogWhine();
-    }, 1800);
+    }, 1200);
     this.timers.push(t2);
 
-    // Step 2: After exploration period, show the question and buttons
+    // Step 2: Show question and buttons quickly
     const t3 = setTimeout(() => {
       this.state = 'playing';
       this.createMechanic();
-      // Paula asks the question
-      speak(this.levelData.instruction, { rate: 0.75 });
-    }, 6500);
+      speak(this.levelData.instruction, { rate: 0.9 });
+    }, 3000);
     this.timers.push(t3);
 
   }
@@ -196,8 +196,8 @@ export class GameScene {
     // Level 1: intro TTS is handled in startLevel1Flow()
     if (this.levelData.id !== 1) {
       const t1 = setTimeout(() => {
-        speak('¡Hola! Soy Paula. ' + this.levelData.instruction, { rate: 0.75 });
-      }, 600);
+        speak('¡Hola! Soy Paula. ' + this.levelData.instruction, { rate: 0.9 });
+      }, 400);
       this.timers.push(t1);
     }
 
@@ -317,9 +317,10 @@ export class GameScene {
 
     // Level 1: Burst from multiple points
     if (this.levelData.id === 1) {
-      this.particles.spawnConfetti(cx - 80, cy, 30);
-      this.particles.spawnConfetti(cx + 80, cy, 30);
-      this.particles.spawnHearts(cx, cy - 60, 15);
+      this.particles.spawnConfetti(cx - 80, cy, 40);
+      this.particles.spawnConfetti(cx + 80, cy, 40);
+      this.particles.spawnHearts(cx, cy - 60, 20);
+      this.particles.spawnStars(cx, cy - 80, 30);
     }
 
     // Animal happy bark
@@ -330,14 +331,14 @@ export class GameScene {
     tween({
       from: { y: this.paula.y },
       to: { y: this.paula.y - jumpHeight },
-      duration: 250,
+      duration: 150,
       ease: 'easeOut',
       onUpdate: (v) => { this.paula.y = v.y; },
       onComplete: () => {
         tween({
           from: { y: this.paula.y },
           to: { y: this.paula.y + jumpHeight },
-          duration: 300,
+          duration: 200,
           ease: 'easeOutBounce',
           onUpdate: (v) => { this.paula.y = v.y; },
         });
@@ -350,8 +351,8 @@ export class GameScene {
     }, 200);
     this.timers.push(t1);
 
-    // Level 1: Petting reward phase — stay in success longer
-    const delay = this.levelData.id === 1 ? 4000 : 800;
+    // Level 1: Quick transition to celebration
+    const delay = this.levelData.id === 1 ? 1200 : 600;
     const t2 = setTimeout(() => {
       this.state = 'celebrate';
       if (this.onComplete) this.onComplete();
@@ -373,8 +374,8 @@ export class GameScene {
     if (this.levelData.id === 1 && wrongWord === 'HUESO') {
       // Paula explains in a friendly way
       const tts1 = setTimeout(() => {
-        speak('¡Un hueso es para comer! Pipo necesita una venda para su pata', { rate: 0.75, pitch: 1.15 });
-      }, 400);
+        speak('¡PATA es donde está lastimado! Pipo necesita una VENDA', { rate: 0.9, pitch: 1.15 });
+      }, 300);
       this.timers.push(tts1);
 
       // Paula points to Pipo's hurt paw
@@ -502,53 +503,51 @@ export class GameScene {
     if (this.levelData.id === 1 && (this.state === 'playing' || this.state === 'explore')) {
       this.levelTimer += dt;
 
-      // Stage 1 (30s): Paula points to Pipo's paw
-      if (this.helpStage < 1 && this.levelTimer > 30) {
+      // Stage 1 (10s): Paula points to Pipo's paw
+      if (this.helpStage < 1 && this.levelTimer > 10) {
         this.helpStage = 1;
         if (this.animal) {
           const pawX = this.animal.x + this.animal.width * 0.5;
           const pawY = this.animal.y + this.animal.height * 0.8;
           this.pointingTarget = { x: pawX, y: pawY };
-          this.pointingTimer = 4.0;
+          this.pointingTimer = 3.0;
           this.paula.setState('pointing');
-          speak('Mira, la pata de Pipo está lastimada. Necesita una venda', { rate: 0.75, pitch: 1.15 });
+          speak('La pata de Pipo necesita una venda', { rate: 0.9, pitch: 1.1 });
         }
       }
 
-      // Stage 2 (45s): Paula says which button
-      if (this.helpStage < 2 && this.levelTimer > 45) {
+      // Stage 2 (15s): Paula says which button
+      if (this.helpStage < 2 && this.levelTimer > 15) {
         this.helpStage = 2;
-        speak('Toca la palabra VENDA para curar a Pipo', { rate: 0.7, pitch: 1.2 });
+        speak('Toca VENDA', { rate: 0.9, pitch: 1.15 });
         if (this.mechanic && this.mechanic.highlightCorrect) {
           this.mechanic.highlightCorrect();
         }
       }
 
-      // Stage 3 (60s): Stronger highlight + Paula repeats
-      if (this.helpStage < 3 && this.levelTimer > 60) {
+      // Stage 3 (20s): Stronger highlight + Paula repeats
+      if (this.helpStage < 3 && this.levelTimer > 20) {
         this.helpStage = 3;
-        speak('¡VENDA! Toca VENDA', { rate: 0.7, pitch: 1.25 });
+        speak('¡VENDA!', { rate: 0.9, pitch: 1.2 });
         if (this.mechanic && this.mechanic.highlightCorrect) {
           this.mechanic.highlightCorrect();
         }
-        // Auto-activate hint level 3
         this.activateHint(3);
       }
 
-      // Stage 4 (90s): Auto-complete with 1 star
-      if (this.helpStage < 4 && this.levelTimer > 90) {
+      // Stage 4 (30s): Auto-complete with 1 star
+      if (this.helpStage < 4 && this.levelTimer > 30) {
         this.helpStage = 4;
-        // Simulate correct answer
         if (this.mechanic && this.mechanic.onSuccess) {
           this.mechanic.onSuccess();
         }
       }
     }
 
-    // Detect inactivity for hints
+    // Detect inactivity for hints — faster for kids
     if (this.state === 'playing' && !this.mechanic?.completed) {
       this.inactivityTimer += dt;
-      if (this.inactivityTimer > 8.0 && this.hintLevel === 0) {
+      if (this.inactivityTimer > 3.0 && this.hintLevel === 0) {
         this.activateHint(1);
       }
     }
